@@ -1,0 +1,499 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="台北コンパス｜あなたの台北インスピレーションガイド">
+  <main class="ai-page">
+    <div class="section-head">
+      <span class="section-label">AI アシスタント</span>
+      <h1>台北コンパスに聞く</h1>
+      <span id="ai-weather-badge" class="ai-weather-badge" style="display:none" aria-live="polite"></span>
+      <button id="clear-history-btn" class="clear-history-btn" style="display:none" title="チャット履歴を削除">
+        <span class="material-symbols-outlined">delete_sweep</span>
+        履歴を削除
+      </button>
+    </div>
+
+    <div class="chat-shell">
+      <div class="chat-panel">
+        <div class="chat-messages" id="chat-container">
+          <article class="chat-message assistant">
+            <div class="avatar assistant-icon"><span class="material-symbols-outlined">auto_awesome</span></div>
+            <div class="message-bubble">こんにちは！私は <strong>台北コンパス アシスタント</strong>です。ガイドに載っているお店や名所だけを案内します——食事・観光・一日プランなど、お気軽にどうぞ。</div>
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <footer class="ai-footer">
+      <div class="input-card">
+        <textarea id="user-input" placeholder="例：大安区で深夜まで開いている火鍋、西門町近くの雨の日でも楽しめる屋内スポット…" rows="1" aria-label="AI に質問"></textarea>
+        <button id="send-btn" type="button" aria-label="送信">
+          <span class="material-symbols-outlined">send</span>
+        </button>
+      </div>
+    </footer>
+  </main>
+
+  <style is:global>
+    /* ── AI PAGE LAYOUT ── */
+    .ai-page { background: linear-gradient(180deg, #FEFAF4 0%, #F5ECD7 35%, #FDF6E3 100%); height: 100vh; padding-top: 72px; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* ── SECTION HEADER ── */
+    .section-head { text-align: center; padding: 1rem 1rem 0.6rem; flex-shrink: 0; }
+    .section-label { display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.6rem; font-weight: 700; color: var(--vermillion); }
+    .section-label::before, .section-label::after { content: ''; width: 18px; height: 1px; background: var(--vermillion); opacity: 0.7; }
+    .section-head h1 { font-family: 'Shippori Mincho', serif; font-size: clamp(1.4rem, 3vw, 1.9rem); line-height: 1.2; margin-top: 0.35rem; color: var(--ink); }
+    .ai-weather-badge { display: inline-flex; margin-top: 0.45rem; font-size: 0.76rem; font-weight: 700; color: var(--jade); background: rgba(30,107,82,0.08); border: 1px solid rgba(30,107,82,0.16); border-radius: 999px; padding: 0.2rem 0.65rem; }
+
+    /* ── CHAT SHELL ── */
+    .chat-shell { flex: 1; display: flex; align-items: stretch; justify-content: center; padding: 0 1.5rem; min-height: 0; }
+    .chat-panel { width: 100%; max-width: 820px; background: rgba(255,255,255,0.95); border: 1px solid rgba(192,57,43,0.12); border-radius: 1.25rem 1.25rem 0 0; display: flex; flex-direction: column; box-shadow: 0 -2px 24px rgba(192,57,43,0.07), inset 0 1px 0 rgba(255,255,255,0.8); overflow: hidden; }
+
+    /* ── MESSAGES ── */
+    .chat-messages { flex: 1; padding: 1.25rem 1.25rem 0.75rem; display: flex; flex-direction: column; gap: 0.85rem; overflow-y: auto; min-height: 0; scroll-behavior: smooth; }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: rgba(192,57,43,0.18); border-radius: 2px; }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .chat-message { display: grid; grid-template-columns: auto 1fr; gap: 0.65rem; align-items: end; max-width: 80%; word-break: break-word; overflow-wrap: break-word; animation: msgIn 0.22s ease both; }
+    .chat-message.user { grid-template-columns: 1fr auto; margin-left: auto; }
+    .avatar { width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center; background: var(--vermillion); color: #fff; font-size: 0.85rem; flex-shrink: 0; }
+    .assistant-icon { background: rgba(192,57,43,0.1); color: var(--vermillion); border: 1px solid rgba(192,57,43,0.18); }
+    .message-bubble { border-radius: 1.1rem; padding: 0.8rem 1.1rem; font-size: 0.95rem; line-height: 1.7; }
+    .chat-message.assistant .message-bubble { background: #fff; color: var(--ink); border: 1px solid rgba(192,57,43,0.1); border-bottom-left-radius: 0.2rem; box-shadow: 0 2px 10px rgba(26,26,46,0.05); }
+    .chat-message.user .message-bubble { background: var(--vermillion); color: #fff; border-bottom-right-radius: 0.2rem; box-shadow: 0 3px 12px rgba(192,57,43,0.28); }
+    .ai-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.75rem; }
+    .ai-chip { background: rgba(192,57,43,0.06); border: 1.5px solid rgba(192,57,43,0.3); color: var(--vermillion); border-radius: 999px; padding: 0.35rem 0.85rem; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+    .ai-chip:hover:not(:disabled) { background: var(--vermillion); color: #fff; border-color: var(--vermillion); transform: translateY(-1px); }
+    .ai-chip:disabled { cursor: default; }
+    .chat-message.assistant .message-bubble ul { margin: 0.5rem 0 0.25rem 1.1rem; }
+    .chat-message.assistant .message-bubble li { margin: 0.2rem 0; }
+
+    /* ── FOOTER / INPUT ── */
+    .ai-footer { flex-shrink: 0; padding: 0.6rem 1.5rem 1rem; display: flex; justify-content: center; }
+    .input-card { width: 100%; max-width: 820px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 0.5rem; background: #fff; border: 1.5px solid rgba(192,57,43,0.16); border-top: none; border-radius: 0 0 1.25rem 1.25rem; padding: 0.5rem 0.5rem 0.5rem 1rem; box-shadow: 0 6px 24px rgba(192,57,43,0.08); transition: border-color 0.2s, box-shadow 0.2s; }
+    .input-card:focus-within { border-color: rgba(192,57,43,0.45); box-shadow: 0 6px 28px rgba(192,57,43,0.14); }
+    textarea#user-input { width: 100%; min-height: 36px; resize: none; border: none; outline: none; font: 0.95rem 'Noto Sans TC', sans-serif; color: var(--ink); background: transparent; padding: 0.15rem 0; }
+    textarea#user-input::placeholder { color: rgba(26,26,46,0.32); }
+    button#send-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--vermillion); color: #fff; display: grid; place-items: center; cursor: pointer; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; flex-shrink: 0; box-shadow: 0 2px 8px rgba(192,57,43,0.3); }
+    button#send-btn:hover:not(:disabled) { background: #a93226; transform: scale(1.08); box-shadow: 0 4px 14px rgba(192,57,43,0.4); }
+    button#send-btn:active:not(:disabled) { transform: scale(0.94); }
+    .disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── PREF CHIP ── */
+    .pref-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; padding: 0.2rem 0.6rem; margin: 0.25rem 0.25rem 0 0; border-radius: 999px; background: rgba(192,57,43,0.08); color: var(--vermillion); border: 1px solid rgba(192,57,43,0.15); }
+
+    /* ── PLACE PILLS ── */
+    .place-pill { display: inline-grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.6rem; margin: 0.3rem 0.3rem 0.3rem 0; padding: 0.5rem 0.8rem; background: #fff; border: 1px solid rgba(192,57,43,0.18); border-radius: 12px; text-decoration: none; color: var(--ink); min-width: 200px; max-width: 300px; box-shadow: 0 1px 4px rgba(26,26,46,0.06); transition: transform 130ms ease, box-shadow 130ms ease, border-color 130ms ease; }
+    .place-pill:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(192,57,43,0.14); border-color: var(--vermillion); }
+    .place-pill .material-symbols-outlined { font-size: 20px; color: var(--vermillion); }
+    .place-pill-body { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+    .place-pill-kind { font-size: 0.63rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--vermillion); opacity: 0.85; }
+    .place-pill-name { font-size: 0.9rem; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .place-pill-arrow { font-size: 18px !important; opacity: 0.4; color: var(--vermillion); }
+    .hotel-pill { border-color: rgba(46,109,164,0.3); }
+    .hotel-pill:hover { border-color: #2e6da4; box-shadow: 0 8px 22px rgba(46,109,164,0.16); }
+    .hotel-pill .material-symbols-outlined { color: #2e6da4; }
+    .hotel-pill .place-pill-kind { color: #2e6da4; }
+
+    .clear-history-btn { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.5rem; padding: 0.25rem 0.75rem; font-size: 0.72rem; font-weight: 600; color: rgba(26,26,46,0.45); background: transparent; border: 1px solid rgba(26,26,46,0.15); border-radius: 999px; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .clear-history-btn .material-symbols-outlined { font-size: 14px; }
+    .clear-history-btn:hover { color: var(--vermillion); border-color: var(--vermillion); background: rgba(192,57,43,0.05); }
+    .history-divider { display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0; color: rgba(26,26,46,0.3); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.08em; }
+    .history-divider::before, .history-divider::after { content: ''; flex: 1; height: 1px; background: rgba(26,26,46,0.1); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .section-head { padding: 0.6rem 1rem 0.4rem; }
+      .chat-shell { padding: 0 0.75rem; }
+      .ai-footer { padding: 0.4rem 0.75rem 0.75rem; }
+      .chat-message { max-width: 92%; }
+      .place-pill { min-width: 160px; max-width: 260px; }
+    }
+  </style>
+
+  <script>
+    import { buildGroundedPrompt, loadPrefs } from '../../lib/ai';
+    import { getUserLocation, getNearbyAttractions, guessDistrict, loadCachedUserLocation, saveCachedUserLocation } from '../../lib/location';
+    import { fetchWeather, buildWeatherHint, weatherBadge } from '../../lib/weather';
+    import attractionsRaw from '../../../scripts/pages/attractions_jp.json';
+    import mrt from '../../data/mrt.json';
+
+    const attractions = (attractionsRaw as any[]).filter((attraction) => Number(attraction.suggestion_level) === 3);
+    const LANG = 'jp' as const;
+    const API_KEY = (import.meta as any).env.PUBLIC_GEMINI_API_KEY ?? '';
+
+    const chatContainer = document.getElementById('chat-container')!;
+    const userInput = document.getElementById('user-input') as HTMLTextAreaElement;
+    const sendBtn = document.getElementById('send-btn') as HTMLButtonElement;
+
+    const errorMsgs = {
+      noKey: 'PUBLIC_GEMINI_API_KEY が設定されていません。.env に追加して再ビルドしてください。',
+      apiError: 'コンパスが同期中です、もう一度お試しください！',
+      networkError: 'このブラウザから Gemini に接続できません。ネットワーク、ブラウザのブロック、または API キー制限をご確認ください。',
+      rateLimit: 'この API キーの Gemini クォータを使い切っています。Google AI Studio の使用量/請求ページを確認するか、クォータのリセット後に再試行してください。',
+    };
+
+    const prefs = loadPrefs();
+    if (prefs && (prefs.interests.length || prefs.districts.length)) {
+      const bits: string[] = [];
+      if (prefs.interests.length) bits.push(prefs.interests.join(' · '));
+      if (prefs.districts.length) bits.push(prefs.districts.join(' · '));
+      const welcome = chatContainer.querySelector('.chat-message.assistant .message-bubble');
+      if (welcome) {
+        welcome.innerHTML +=
+          '<div style="margin-top:0.5rem;"><span class="pref-chip">あなたの好み：' +
+          bits.join(' • ') +
+          '</span></div>';
+      }
+    }
+
+    function escapeHtml(s: string): string {
+      return s.replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
+      ));
+    }
+
+    function renderPlaceMarkers(text: string): string {
+      return text.replace(
+        /<<PLACE:(a|r|h):([^>]+?)>>([\s\S]*?)<<\/PLACE>>/g,
+        (_m, type, id, name) => {
+          const safeId = encodeURIComponent(String(id).trim());
+          const safeName = escapeHtml(String(name).trim());
+          const href = type === 'h' ? `/jp/hotel/${safeId}?from=ai` : `/jp/place/${type}/${safeId}?from=ai`;
+          const icon = type === 'r' ? 'restaurant' : type === 'h' ? 'hotel' : 'location_on';
+          const kind = type === 'r' ? 'レストラン' : 'スポット';
+          return `
+            <a class="${type === 'h' ? 'place-pill hotel-pill' : 'place-pill'}" href="${href}" data-place="${type}:${safeId}">
+              <span class="material-symbols-outlined">${icon}</span>
+              <span class="place-pill-body">
+                <span class="place-pill-kind">${kind}</span>
+                <span class="place-pill-name">${safeName}</span>
+              </span>
+              <span class="material-symbols-outlined place-pill-arrow">chevron_right</span>
+            </a>
+          `;
+        },
+      );
+    }
+
+    function formatMarkdown(text: string): string {
+      const PLACEHOLDER = '\u0000P\u0000';
+      const markers: string[] = [];
+      let stripped = text.replace(/<<PLACE:[a-z]+:[^>]+?>>[\s\S]*?<<\/PLACE>>/g, (m) => {
+        markers.push(m);
+        return PLACEHOLDER + (markers.length - 1) + PLACEHOLDER;
+      });
+      stripped = escapeHtml(stripped);
+      stripped = stripped.replace(new RegExp(PLACEHOLDER + '(\\d+)' + PLACEHOLDER, 'g'),
+        (_m, i) => markers[Number(i)]);
+      stripped = stripped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      stripped = stripped.replace(/^- (.+)$/gm, '<li>$1</li>');
+      stripped = stripped.replace(/(<li>[\s\S]*?<\/li>)(?!\s*<li>)/, (m) => `<ul>${m}</ul>`);
+      stripped = stripped.replace(/\n\n/g, '<br/><br/>');
+      // Render [[Chip]] suggestion options as clickable buttons
+      stripped = stripped.replace(/(\[\[[^\]]+\]\]\s*)+/g, (line) => {
+        const chips = [...line.matchAll(/\[\[([^\]]+)\]\]/g)];
+        if (!chips.length) return line;
+        return '<div class="ai-chips">' +
+          chips.map(c => '<button class="ai-chip" type="button">' + c[1] + '</button>').join('') +
+          '</div>';
+      });
+      return renderPlaceMarkers(stripped);
+    }
+
+    function addMessage(text: string, isUser = false) {
+      const w = document.createElement('article');
+      w.className = `chat-message ${isUser ? 'user' : 'assistant'}`;
+      const body = isUser ? text.replace(/</g, '&lt;') : formatMarkdown(text);
+      w.innerHTML = `
+        <div class="avatar ${isUser ? '' : 'assistant-icon'}">
+          <span class="material-symbols-outlined">${isUser ? 'person' : 'auto_awesome'}</span>
+        </div>
+        <div class="message-bubble">${body}</div>
+      `;
+      chatContainer.appendChild(w);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+
+
+    // ── Suggestion chip click handler (delegated) ───────────────────────────
+    chatContainer.addEventListener('click', (e: MouseEvent) => {
+      const chip = (e.target as Element).closest('.ai-chip') as HTMLButtonElement | null;
+      if (!chip) return;
+      const text = chip.textContent?.trim() || '';
+      if (!text) return;
+      chip.closest('.ai-chips')?.querySelectorAll('.ai-chip').forEach((c) => {
+        (c as HTMLButtonElement).disabled = true;
+        (c as HTMLElement).style.opacity = '0.5';
+      });
+      chip.style.opacity = '1';
+      chip.style.fontWeight = '800';
+      userInput.value = text;
+      userInput.dispatchEvent(new Event('input'));
+      sendBtn.click();
+    });
+    // ── Real-time location + weather state ──────────────────────────────────
+    let _weatherContext: string | undefined;
+    let _locationContext: { lat?: number; lng?: number; district?: string; nearbyNames: string[]; radiusKm: number } | undefined;
+    let _weatherBadge: string | undefined;
+
+    const weatherEl = document.getElementById('ai-weather-badge');
+
+    let _locationAsked = false;
+    let _locationGranted = false;
+    let _locationResolve: (() => void) | null = null;
+
+    function buildTimeContext(): string {
+      const now = new Date();
+      const hour = now.getHours();
+      const mins = now.getMinutes().toString().padStart(2, '0');
+      const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : hour < 21 ? 'evening' : 'night';
+      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      return `Current local time in Taipei: ${days[now.getDay()]} ${hour}:${mins} (${period}).`;
+    }
+
+    async function fetchLocationWeather() {
+      try {
+        const cached = loadCachedUserLocation();
+        const pos = cached ?? await getUserLocation(6000);
+        if (!cached) saveCachedUserLocation(pos);
+        const [weatherData] = await Promise.all([fetchWeather(pos.lat, pos.lng)]);
+        const hint = buildWeatherHint(weatherData);
+        _weatherContext = hint as string;
+        _weatherBadge = weatherBadge(weatherData);
+        if (weatherEl) { weatherEl.textContent = _weatherBadge; weatherEl.style.display = ''; }
+        const nearby = getNearbyAttractions(attractions as any, pos, 2.5);
+        const district = guessDistrict(attractions as any, pos);
+        _locationContext = {
+          lat: pos.lat, lng: pos.lng, district,
+          nearbyNames: nearby.slice(0, 8).map((a: any) => a.name),
+          radiusKm: 2.5,
+        };
+        _locationGranted = true;
+        addMessage('📍 位置情報を取得しました！近くのスポットや現在の天気を考慮してご提案できます。', false);
+      } catch {
+        addMessage('了解しました。位置情報なしで台北全体から素敵な場所をご紹介します。', false);
+      }
+      if (_locationResolve) { _locationResolve(); _locationResolve = null; }
+    }
+
+    function askForLocation() {
+      if (_locationAsked) return;
+      _locationAsked = true;
+      const msg = document.createElement('article');
+      msg.className = 'chat-message assistant';
+      msg.innerHTML =
+        '<div class="avatar assistant-icon"><span class="material-symbols-outlined">auto_awesome</span></div>' +
+        '<div class="message-bubble">より良いスポットを提案するために、現在地を使用してもよいですか？' +
+        '<div class="ai-chips" id="location-chips">' +
+        '<button class="ai-chip" id="loc-yes" type="button">📍 はい、位置を使う</button>' +
+        '<button class="ai-chip" id="loc-no"  type="button">🗺️ 結構です</button>' +
+        '</div></div>';
+      chatContainer.appendChild(msg);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      document.getElementById('loc-yes')?.addEventListener('click', () => {
+        document.getElementById('location-chips')?.querySelectorAll('.ai-chip').forEach((c) => {
+          (c as HTMLButtonElement).disabled = true; (c as HTMLElement).style.opacity = '0.5';
+        });
+        (document.getElementById('loc-yes') as HTMLElement).style.opacity = '1';
+        fetchLocationWeather();
+      });
+      document.getElementById('loc-no')?.addEventListener('click', () => {
+        document.getElementById('location-chips')?.querySelectorAll('.ai-chip').forEach((c) => {
+          (c as HTMLButtonElement).disabled = true; (c as HTMLElement).style.opacity = '0.5';
+        });
+        (document.getElementById('loc-no') as HTMLElement).style.opacity = '1';
+        addMessage('了解しました！台北全体でおすすめします！', false);
+        if (_locationResolve) { _locationResolve(); _locationResolve = null; }
+      });
+    }
+
+    if (loadCachedUserLocation()) {
+      fetchLocationWeather();
+    } else {
+      setTimeout(askForLocation, 1200);
+    }
+    const contextReady = Promise.resolve();
+    // ────────────────────────────────────────────────────────────────────────
+
+
+    // ── Conversation history (last 20 turns) ─────────────────────────────────
+    const _history: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
+    const MAX_HISTORY_TURNS = 20;
+
+    // ── Persistent chat history ──────────────────────────────────────────────
+    const HISTORY_KEY = 'ytp_ai_history_jp';
+    const MAX_STORED_MESSAGES = 60;
+    const _displayHistory: { role: 'user' | 'assistant'; text: string }[] = [];
+    const clearHistoryBtn = document.getElementById('clear-history-btn') as HTMLButtonElement;
+
+    function saveHistory() {
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(_displayHistory.slice(-MAX_STORED_MESSAGES)));
+        if (clearHistoryBtn) clearHistoryBtn.style.display = _displayHistory.length ? '' : 'none';
+      } catch {}
+    }
+
+    function loadSavedHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (!raw) return;
+        const saved: { role: 'user' | 'assistant'; text: string }[] = JSON.parse(raw);
+        if (!Array.isArray(saved) || saved.length === 0) return;
+        const divider = document.createElement('div');
+        divider.className = 'history-divider';
+        divider.textContent = '前回の会話';
+        chatContainer.appendChild(divider);
+        for (const msg of saved) {
+          const w = document.createElement('article');
+          w.className = `chat-message ${msg.role === 'user' ? 'user' : 'assistant'}`;
+          w.style.animation = 'none';
+          const body = msg.role === 'user' ? msg.text.replace(/</g, '&lt;') : formatMarkdown(msg.text);
+          w.innerHTML = `<div class="avatar ${msg.role === 'user' ? '' : 'assistant-icon'}"><span class="material-symbols-outlined">${msg.role === 'user' ? 'person' : 'auto_awesome'}</span></div><div class="message-bubble">${body}</div>`;
+          chatContainer.appendChild(w);
+          _displayHistory.push(msg);
+          _history.push({ role: msg.role === 'user' ? 'user' : 'model', parts: [{ text: msg.text }] });
+        }
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        if (clearHistoryBtn) clearHistoryBtn.style.display = '';
+      } catch {}
+    }
+
+    clearHistoryBtn?.addEventListener('click', () => {
+      if (!confirm('チャット履歴をすべて削除しますか？')) return;
+      localStorage.removeItem(HISTORY_KEY);
+      _displayHistory.length = 0;
+      _history.length = 0;
+      Array.from(chatContainer.children).slice(1).forEach(m => m.remove());
+      clearHistoryBtn.style.display = 'none';
+    });
+
+    loadSavedHistory();
+
+    function buildTripContext(): string {
+      try {
+        const trip = JSON.parse(localStorage.getItem('ytp_trip') || '[]');
+        if (!Array.isArray(trip) || trip.length === 0) return '';
+        const lines = trip.map((p: any) => {
+          const kind = p.type === 'r' ? 'restaurant' : p.type === 'h' ? 'hotel' : 'attraction';
+          return `- ${p.name} (${kind}${p.district ? ', ' + p.district : ''})`;
+        });
+        return "PLACES ALREADY IN USER'S TRIP PLAN (do not re-recommend these unless asked):\n" + lines.join('\n');
+      } catch { return ''; }
+    }
+
+    let isLoading = false;
+    function setLoading(s: boolean) {
+      isLoading = s;
+      sendBtn.disabled = s;
+      sendBtn.classList.toggle('disabled', s);
+      userInput.disabled = s;
+      userInput.style.opacity = s ? '0.6' : '1';
+    }
+
+    async function askGemini(userText: string, retryCount = 0): Promise<string> {
+      if (!API_KEY) return errorMsgs.noKey;
+      try {
+        await Promise.race([
+          contextReady,
+          new Promise((resolve) => setTimeout(resolve, 1800)),
+        ]);
+        const timeCtx = buildTimeContext();
+        const weatherWithTime = _weatherContext ? `${timeCtx}\n${_weatherContext}` : timeCtx;
+        const { systemPrompt } = await buildGroundedPrompt(
+          LANG,
+          userText,
+          attractions as any,
+          mrt as any,
+          weatherWithTime,
+          _locationContext,
+        );
+        const tripCtx = buildTripContext();
+        const fullSystem = tripCtx ? systemPrompt + '\n\n' + tripCtx : systemPrompt;
+        const recentHistory = _history.slice(-MAX_HISTORY_TURNS * 2);
+        const currentUserTurn = { role: 'user' as const, parts: [{ text: userText }] };
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: fullSystem }] },
+            contents: [...recentHistory, currentUserTurn],
+            generationConfig: {
+              thinkingConfig: { thinkingBudget: 512 },
+              maxOutputTokens: 2048,
+              temperature: 0.7,
+            },
+          }),
+        });
+        if (res.status === 429 && retryCount < 1) {
+          await new Promise((r) => setTimeout(r, 1500 * (retryCount + 1)));
+          return askGemini(userText, retryCount + 1);
+        }
+        const data = await res.json();
+
+        const parts = data?.candidates?.[0]?.content?.parts;
+        const answer = Array.isArray(parts)
+          ? parts.find((pp: any) => pp && typeof pp.text === 'string' && pp.text && !pp.thought)
+          : null;
+        const text: string = answer?.text ?? '';
+        if (text) return text;
+
+        const apiErr = data?.error;
+        if (apiErr) {
+          console.error('Gemini error:', apiErr);
+          if (apiErr.code === 429) {
+            return errorMsgs.rateLimit;
+          }
+          if (apiErr.code === 400) return `リクエストが拒否されました：${apiErr.message ?? 'bad request'}`;
+          if (apiErr.code === 401 || apiErr.code === 403) return 'API キーが無効または権限がありません。.env を確認してください。';
+          return `API エラー (${apiErr.code ?? '?'}): ${apiErr.message ?? 'unknown'}.`;
+        }
+
+        const finish = data?.candidates?.[0]?.finishReason;
+        const block = data?.promptFeedback?.blockReason;
+        if (block) return `セーフティフィルターによりブロック (${block}). 表現を変えてお試しください。`;
+        if (finish === 'MAX_TOKENS') return '回答の途中でトークンが尽きました。短めの質問でお試しください。';
+        if (finish === 'SAFETY') return `セーフティフィルターによりブロック. 表現を変えてお試しください。`;
+        if (finish === 'RECITATION') return '回答がブロックされました（引用類似）。言い換えてお試しください。';
+
+        console.error('Gemini unexpected response:', data);
+        return errorMsgs.apiError;
+      } catch (err) {
+        console.error('Network error:', err);
+        return errorMsgs.networkError;
+      }
+    }
+
+    sendBtn.addEventListener('click', async () => {
+      if (isLoading) return;
+      const text = userInput.value.trim();
+      if (!text) return;
+      addMessage(text, true);
+      userInput.value = '';
+      setLoading(true);
+      const answer = await askGemini(text);
+      addMessage(answer, false);
+      setLoading(false);
+      const cleanAnswer = answer.replace(/<<PLACE:[a-z]+:[^>]+?>>([\s\S]*?)<<\/PLACE>>/g, '$1');
+      _history.push({ role: 'user',  parts: [{ text }] });
+      _history.push({ role: 'model', parts: [{ text: cleanAnswer }] });
+      _displayHistory.push({ role: 'user', text });
+      _displayHistory.push({ role: 'assistant', text: answer });
+      saveHistory();
+    });
+
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!isLoading) sendBtn.click();
+      }
+    });
+    userInput.addEventListener('input', () => {
+      userInput.value = userInput.value.replace(/\n/g, '');
+    });
+  </script>
+</Layout>

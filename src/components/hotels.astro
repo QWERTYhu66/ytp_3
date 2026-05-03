@@ -1,0 +1,439 @@
+---
+import { getHotelsForLang } from '../lib/hotelData';
+
+type Copy = {
+  kicker: string;
+  h1: string;
+  body: string;
+  check: string;
+  browse: string;
+  registeredHotels: string;
+  districtsCovered: string;
+  roomsListed: string;
+  sectionLabel: string;
+  sectionTitle: string;
+  searchPlaceholder: string;
+  searchAria: string;
+  filterAria: string;
+  all: string;
+  showing: string;
+  featuredHotels: string;
+  featuredHotel: string;
+  registered: string;
+  mrtVaries: string;
+  rooms: string;
+  viewDetails: string;
+  from: string;
+  priceVaries: string;
+  mapAria: string;
+  starRated?: string;
+  officialSource?: string;
+  priceFilterLabel?: string;
+  starFilterLabel?: string;
+  priceAll?: string;
+  priceBudget?: string;
+  priceMid?: string;
+  pricePremium?: string;
+  priceUnknown?: string;
+  starAll?: string;
+  starRatedOnly?: string;
+  starThreePlus?: string;
+  starFourPlus?: string;
+  starFivePlus?: string;
+  dataPromptTitle?: string;
+  dataPromptBody?: string;
+  dataPromptZh?: string;
+  dataPromptEn?: string;
+  showMore?: string;
+  showLess?: string;
+};
+
+interface Props {
+  copy: Copy;
+  basePath?: string;
+  lang?: 'en' | 'zh' | 'jp' | 'kr';
+}
+
+const { copy, basePath = '', lang = 'zh' } = Astro.props;
+const hotelList = getHotelsForLang(lang);
+
+// Pick the localised district for each hotel
+const getDistrict = (h: typeof hotelList[0]) => {
+  if (lang === 'en') return h.district_en || h.district;
+  if (lang === 'jp') return h.district_jp || h.district;
+  if (lang === 'kr') return h.district_kr || h.district;
+  return h.district; // zh — keep original Chinese
+};
+const hasLatin = (value: string) => /[A-Za-z]/.test(value || '');
+const legalNo = (value: string) => String(value || '').match(/(\d+)/)?.[1] || '';
+const getDisplayName = (h: typeof hotelList[0]) => {
+  if (lang !== 'en') return h.name;
+  if (hasLatin(h.name)) return h.name;
+  const id = legalNo(h.legal_id);
+  return id ? `Taipei Legal Hotel #${id}` : 'Taipei Legal Hotel';
+};
+
+const totalHotels = hotelList.length;
+const districtCount = new Set(hotelList.map(getDistrict)).size;
+const roomCount = hotelList.reduce((sum, hotel) => sum + (hotel.rooms || 0), 0);
+const browsableHotels = [...hotelList].sort((a, b) => {
+  const starDiff = (b.official_star_rating || 0) - (a.official_star_rating || 0);
+  if (starDiff) return starDiff;
+  const roomDiff = (b.rooms || 0) - (a.rooms || 0);
+  if (roomDiff) return roomDiff;
+  return getDisplayName(a).localeCompare(getDisplayName(b));
+});
+const districts = Array.from(new Set(hotelList.map(getDistrict))).sort((a, b) => a.localeCompare(b));
+
+const formatPrice = (low: number | null, high: number | null) => {
+  const fmt = (value: number) => `NT$${value.toLocaleString()}`;
+  if (low && high) return `${fmt(low)} - ${fmt(high)}`;
+  if (low) return copy.from ? `${copy.from} ${fmt(low)}` : fmt(low);
+  return copy.priceVaries;
+};
+const getPriceLow = (h: typeof hotelList[0]) => h.lowest_price;
+const getPriceHigh = (h: typeof hotelList[0]) => h.highest_price;
+const getStars = (h: typeof hotelList[0]) => h.official_star_rating;
+const showDataLanguagePrompt = lang === 'jp' || lang === 'kr';
+const hasPrice = (h: typeof hotelList[0]) => Number.isFinite(getPriceLow(h) ?? NaN) || Number.isFinite(getPriceHigh(h) ?? NaN);
+---
+
+<main class="hotels-page">
+  <section class="hotels-hero">
+    <div class="hotels-hero-inner">
+      <div class="hotels-copy">
+        <div class="hotel-kicker">
+          <span class="material-symbols-outlined">hotel</span>
+          {copy.kicker}
+        </div>
+        <h1>{copy.h1}</h1>
+        <p>{copy.body}</p>
+        {showDataLanguagePrompt && (
+          <div class="hotel-data-prompt">
+            <div>
+              <strong>{copy.dataPromptTitle}</strong>
+              <span>{copy.dataPromptBody}</span>
+            </div>
+            <div class="hotel-data-actions">
+              <a href="/zh/hotels">{copy.dataPromptZh}</a>
+              <a href="/hotels">{copy.dataPromptEn}</a>
+            </div>
+          </div>
+        )}
+        <div class="hotel-actions">
+          <a href={`${basePath}/hotel-check`} class="hotel-primary">
+            <span class="material-symbols-outlined">manage_search</span>
+            {copy.check}
+          </a>
+          <a href="#hotel-browser" class="hotel-secondary">
+            <span class="material-symbols-outlined">travel_explore</span>
+            {copy.browse}
+          </a>
+        </div>
+      </div>
+
+      <div class="stay-panel" aria-label={copy.mapAria}>
+        <div class="stay-map">
+          <span class="station station-main">Taipei Main</span>
+          <span class="station station-east">Xinyi</span>
+          <span class="station station-north">Shilin</span>
+          <span class="station station-west">Ximen</span>
+          <span class="map-line map-red"></span>
+          <span class="map-line map-blue"></span>
+        </div>
+        <div class="stay-stats">
+          <div>
+            <strong>{totalHotels.toLocaleString()}</strong>
+            <span>{copy.registeredHotels}</span>
+          </div>
+          <div>
+            <strong>{districtCount}</strong>
+            <span>{copy.districtsCovered}</span>
+          </div>
+          <div>
+            <strong>{roomCount.toLocaleString()}</strong>
+            <span>{copy.roomsListed}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hotel-browser" id="hotel-browser">
+    <div class="browser-head">
+      <div>
+        <div class="section-label">{copy.sectionLabel}</div>
+        <h2>{copy.sectionTitle}</h2>
+      </div>
+      <div class="hotel-search">
+        <span class="material-symbols-outlined">search</span>
+        <input id="hotel-search-input" type="search" placeholder={copy.searchPlaceholder} aria-label={copy.searchAria} />
+      </div>
+    </div>
+
+    <div class="hotel-filter-panel">
+      <div class="district-filter" aria-label={copy.filterAria}>
+        <button class="district-chip is-active" type="button" data-district="all">{copy.all}</button>
+        {districts.map((district) => (
+          <button class="district-chip" type="button" data-district={district}>{lang === 'zh' ? district.replace('區', '') : district}</button>
+        ))}
+      </div>
+      <div class="hotel-select-filters">
+        <label>
+          <span>{copy.priceFilterLabel || 'Price'}</span>
+          <select id="hotel-price-filter">
+            <option value="all">{copy.priceAll || 'Any price'}</option>
+            <option value="budget">{copy.priceBudget || 'Under NT$3,000'}</option>
+            <option value="mid">{copy.priceMid || 'NT$3,000-8,000'}</option>
+            <option value="premium">{copy.pricePremium || 'NT$8,000+'}</option>
+            <option value="unknown">{copy.priceUnknown || 'Price varies'}</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div id="hotel-count" class="hotel-count">{copy.showing} {browsableHotels.length} {copy.featuredHotels}</div>
+
+    <div class="hotel-grid" id="hotel-grid">
+      {browsableHotels.map((hotel) => (
+        <article
+          class="stay-card"
+          data-district={getDistrict(hotel)}
+          data-search={`${hotel.name} ${hotel.name_zh} ${hotel.name_en} ${hotel.address} ${hotel.address_zh} ${hotel.address_en} ${hotel.location} ${hotel.closest_mrt} ${getDistrict(hotel)}`}
+          data-price-low={getPriceLow(hotel) ?? ''}
+          data-price-high={getPriceHigh(hotel) ?? ''}
+          data-price-known={hasPrice(hotel) ? 'true' : 'false'}
+        >
+          <a href={`${basePath}/hotel/${hotel.id}`} class="stay-card-link">
+            <div class="stay-card-top">
+              <span class="stay-icon material-symbols-outlined">apartment</span>
+            </div>
+            <h3>{getDisplayName(hotel)}</h3>
+            {lang === 'en' && !hasLatin(hotel.name) && (
+              <p style="margin:-0.2rem 0 0.45rem;font-size:0.73rem;color:#7b7164">Official name: {hotel.name}</p>
+            )}
+            <p>{hotel.address}</p>
+            <div class="stay-meta">
+              <span><span class="material-symbols-outlined">subway</span>{hotel.closest_mrt || copy.mrtVaries}</span>
+              <span><span class="material-symbols-outlined">location_on</span>{getDistrict(hotel)}</span>
+              {hotel.rooms && <span><span class="material-symbols-outlined">bed</span>{hotel.rooms} {copy.rooms}</span>}
+            </div>
+            <div class="stay-card-bottom">
+              <div>
+                <strong>{formatPrice(getPriceLow(hotel), getPriceHigh(hotel))}</strong>
+                {hotel.official_star_source && <em>{copy.officialSource}</em>}
+              </div>
+              <span>{copy.viewDetails}</span>
+            </div>
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <div class="hotel-pagination-row" id="hotelPaginationRow" style="display:none">
+      <button class="hotel-page-btn" id="hotelPrevBtn" disabled>&#8249;</button>
+      <span class="hotel-page-info" id="hotelPageInfo"></span>
+      <button class="hotel-page-btn" id="hotelNextBtn">&#8250;</button>
+    </div>
+  </section>
+</main>
+
+<style is:global>
+  .hotels-page { min-height: 100vh; background: #f8f3e6; color: var(--ink, #1a1a2e); }
+  .hotels-hero { padding: 132px 2rem 4rem; background: #163b46; color: #fff; }
+  .hotels-hero-inner { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 3rem; align-items: center; }
+  .hotel-kicker { display: inline-flex; align-items: center; gap: 0.45rem; color: #c9eadf; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.13em; text-transform: uppercase; }
+  .hotel-kicker .material-symbols-outlined { font-size: 18px; }
+  .hotels-copy h1 { max-width: 760px; font-family: 'Noto Serif TC', serif; font-size: clamp(2.3rem, 5vw, 4.4rem); line-height: 1.06; margin: 0.8rem 0 1rem; }
+  .hotels-copy p { max-width: 660px; color: rgba(255,255,255,0.86); font-size: 1.05rem; line-height: 1.8; }
+  .hotel-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.75rem; }
+  .hotel-data-prompt { max-width: 660px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; padding: 0.85rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(255,255,255,0.1); }
+  .hotel-data-prompt strong { display: block; color: #f5c15c; font-size: 0.9rem; margin-bottom: 0.15rem; }
+  .hotel-data-prompt span { display: block; color: rgba(255,255,255,0.82); font-size: 0.82rem; line-height: 1.45; }
+  .hotel-data-actions { display: flex; gap: 0.45rem; flex-shrink: 0; }
+  .hotel-data-actions a { display: inline-flex; align-items: center; min-height: 34px; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; color: #fff; padding: 0.25rem 0.7rem; text-decoration: none; font-size: 0.8rem; font-weight: 900; }
+  .hotel-data-actions a:hover { background: rgba(255,255,255,0.12); }
+  .hotel-primary, .hotel-secondary { display: inline-flex; align-items: center; gap: 0.45rem; border-radius: 8px; padding: 0.78rem 1rem; text-decoration: none; font-weight: 900; }
+  .hotel-primary { background: #f5c15c; color: #1f2d30; }
+  .hotel-secondary { border: 1px solid rgba(255,255,255,0.28); color: #fff; }
+  .hotel-primary .material-symbols-outlined, .hotel-secondary .material-symbols-outlined { font-size: 18px; }
+  .stay-panel { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 1rem; box-shadow: 0 28px 80px rgba(0,0,0,0.22); }
+  .stay-map { position: relative; height: 250px; overflow: hidden; border-radius: 8px; background: linear-gradient(135deg, #eaf4ee, #f8efe0); }
+  .stay-map::before { content: ''; position: absolute; inset: 22px; border: 1px solid rgba(22,59,70,0.15); background-image: linear-gradient(rgba(22,59,70,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(22,59,70,0.08) 1px, transparent 1px); background-size: 34px 34px; }
+  .map-line { position: absolute; height: 7px; border-radius: 999px; opacity: 0.9; }
+  .map-red { width: 260px; left: 54px; top: 126px; background: #c0392b; transform: rotate(-16deg); }
+  .map-blue { width: 230px; left: 78px; top: 112px; background: #2e6da4; transform: rotate(35deg); }
+  .station { position: absolute; z-index: 2; background: #fff; border: 2px solid #163b46; border-radius: 999px; padding: 0.35rem 0.55rem; color: #163b46; font-size: 0.72rem; font-weight: 900; box-shadow: 0 8px 18px rgba(22,59,70,0.16); }
+  .station-main { left: 132px; top: 108px; }
+  .station-east { right: 42px; top: 78px; }
+  .station-north { left: 72px; top: 34px; }
+  .station-west { left: 56px; bottom: 42px; }
+  .stay-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; margin-top: 0.75rem; }
+  .stay-stats div { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 0.8rem; }
+  .stay-stats strong { display: block; font-size: 1.35rem; line-height: 1; color: #f5c15c; }
+  .stay-stats span { display: block; color: rgba(255,255,255,0.78); font-size: 0.76rem; line-height: 1.35; margin-top: 0.35rem; }
+  .hotel-browser { max-width: 1120px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+  .browser-head { display: grid; grid-template-columns: 1fr minmax(260px, 380px); gap: 1rem; align-items: end; margin-bottom: 1rem; }
+  .section-label { color: #b8422e; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; }
+  .browser-head h2 { font-family: 'Noto Serif TC', serif; font-size: clamp(1.7rem, 3vw, 2.55rem); line-height: 1.15; margin-top: 0.2rem; }
+  .hotel-search { min-height: 48px; display: flex; align-items: center; gap: 0.45rem; background: #fff; border: 1px solid rgba(22,59,70,0.16); border-radius: 8px; padding: 0 0.8rem; }
+  .hotel-search .material-symbols-outlined { color: #2e6da4; font-size: 20px; }
+  .hotel-search input { width: 100%; border: 0; outline: 0; background: transparent; font: inherit; color: #1a1a2e; }
+  .hotel-filter-panel { display: grid; gap: 0.85rem; margin-bottom: 1rem; }
+  .district-filter { display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.25rem 0; }
+  .district-chip { flex: 0 0 auto; border: 1px solid rgba(22,59,70,0.18); background: #fff; color: #415157; border-radius: 999px; min-height: 36px; padding: 0.35rem 0.7rem; font: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer; }
+  .district-chip.is-active { background: #163b46; color: #fff; border-color: #163b46; }
+  .hotel-select-filters { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .hotel-select-filters label { display: grid; gap: 0.3rem; min-width: 180px; color: #546066; font-size: 0.74rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
+  .hotel-select-filters select { min-height: 40px; border: 1px solid rgba(22,59,70,0.18); border-radius: 8px; background: #fff; color: #1a1a2e; padding: 0 2rem 0 0.7rem; font: inherit; font-size: 0.86rem; font-weight: 800; }
+  .hotel-count { color: #6b6256; font-size: 0.86rem; font-weight: 800; margin-bottom: 1rem; }
+  .hotel-pagination-row { display: flex; justify-content: center; align-items: center; gap: 0.75rem; padding: 1.5rem 0 0.5rem; }
+  .hotel-page-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1.5px solid rgba(22,59,70,0.3); background: #fff; color: #163b46; font-size: 1.4rem; line-height: 1; cursor: pointer; transition: all 0.18s; }
+  .hotel-page-btn:hover:not(:disabled) { background: #163b46; color: #fff; border-color: #163b46; }
+  .hotel-page-btn:disabled { opacity: 0.3; cursor: default; }
+  .hotel-page-info { font-size: 0.88rem; font-weight: 600; color: rgba(26,26,46,0.55); min-width: 80px; text-align: center; }
+  .hotel-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  .stay-card { min-height: 278px; }
+  .stay-card.is-hidden { display: none; }
+  .stay-card-link { height: 100%; display: flex; flex-direction: column; background: #fff; color: inherit; border: 1px solid rgba(22,59,70,0.13); border-radius: 8px; padding: 1rem; text-decoration: none; box-shadow: 0 12px 30px rgba(22,59,70,0.07); transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease; }
+  .stay-card-link:hover { transform: translateY(-3px); border-color: rgba(46,109,164,0.42); box-shadow: 0 16px 34px rgba(22,59,70,0.12); }
+  .stay-card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .stay-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 8px; background: #eaf3f6; color: #2e6da4; }
+  .verified-pill { display: inline-flex; align-items: center; gap: 0.2rem; color: #1e6b52; background: #edf8f1; border-radius: 999px; padding: 0.26rem 0.5rem; font-size: 0.72rem; font-weight: 900; }
+  .verified-pill .material-symbols-outlined { font-size: 14px; }
+  .stay-card h3 { font-size: 1rem; line-height: 1.28; margin: 0 0 0.45rem; color: #163b46; }
+  .stay-card p { color: #62584c; font-size: 0.84rem; line-height: 1.55; margin-bottom: 0.75rem; }
+  .stay-meta { display: grid; gap: 0.35rem; color: #506065; font-size: 0.78rem; }
+  .stay-meta span { display: flex; align-items: center; gap: 0.3rem; min-width: 0; }
+  .stay-meta .material-symbols-outlined { color: #2e6da4; font-size: 15px; flex: 0 0 auto; }
+  .stay-card-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 0.75rem; border-top: 1px solid rgba(22,59,70,0.1); padding-top: 0.8rem; margin-top: auto; }
+  .stay-card-bottom strong { display: block; color: #b8422e; font-size: 0.9rem; }
+  .stay-card-bottom em { display: block; margin-top: 0.15rem; color: #7b7164; font-size: 0.68rem; font-style: normal; line-height: 1.25; }
+  .stay-card-bottom span { color: #2e6da4; font-size: 0.78rem; font-weight: 900; white-space: nowrap; }
+  /* ── Tablet (≤1024px) ── */
+  @media (max-width: 1024px) {
+    .hotel-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .hotels-hero-inner { gap: 2rem; }
+    .hotel-select-filters label { min-width: 140px; }
+  }
+  /* ── Narrow tablet (≤980px) ── */
+  @media (max-width: 980px) {
+    .hotels-hero-inner { grid-template-columns: 1fr; }
+    .stay-panel { max-width: 100%; }
+    .hotel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hotels-copy h1 { font-size: clamp(1.8rem, 5vw, 3rem); }
+    .hotel-actions { flex-wrap: wrap; }
+    .stay-map { height: 160px; }
+  }
+  /* ── Large mobile (≤768px) ── */
+  @media (max-width: 768px) {
+    .hotels-hero { padding: 110px 1.5rem 3rem; }
+    .hotel-browser { padding: 2rem 1.5rem 4rem; }
+    .browser-head { grid-template-columns: 1fr; gap: 0.75rem; }
+    .hotel-select-filters { gap: 0.5rem; }
+    .hotel-select-filters label { min-width: calc(50% - 0.25rem); flex: 1 1 calc(50% - 0.25rem); }
+    .hotel-select-filters select { width: 100%; }
+    .stay-stats { grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+  }
+  /* ── Mobile (≤680px) ── */
+  @media (max-width: 680px) {
+    .hotels-hero { padding: 100px 1.25rem 2.5rem; }
+    .hotel-browser { padding: 1.75rem 1.25rem 3.5rem; }
+    .browser-head, .hotel-grid { grid-template-columns: 1fr; }
+    .hotel-data-prompt { align-items: flex-start; flex-direction: column; }
+    .stay-stats { grid-template-columns: 1fr; }
+    .hotel-select-filters label { min-width: 100%; flex: 1 1 100%; }
+    .stay-card { min-height: unset; }
+  }
+  /* ── Small mobile (≤420px) ── */
+  @media (max-width: 420px) {
+    .hotels-hero { padding: 90px 1rem 2rem; }
+    .hotel-browser { padding: 1.5rem 1rem 3rem; }
+    .district-filter { gap: 0.35rem; }
+    .district-chip { font-size: 0.75rem; padding: 0.28rem 0.55rem; }
+    .stay-card-link { padding: 0.85rem; }
+    .hotel-actions { flex-direction: column; }
+    .hotel-primary, .hotel-secondary { width: 100%; justify-content: center; }
+    .hotel-page-btn { width: 2.4rem; }
+  }
+</style>
+
+<script define:vars={{ showing: copy.showing, featuredHotel: copy.featuredHotel, featuredHotels: copy.featuredHotels }}>
+  const PAGE = 30;
+  const input = document.getElementById('hotel-search-input');
+  const priceFilter = document.getElementById('hotel-price-filter');
+  const count = document.getElementById('hotel-count');
+  const cards = Array.from(document.querySelectorAll('.stay-card'));
+  const chips = Array.from(document.querySelectorAll('.district-chip'));
+  const paginationRow = document.getElementById('hotelPaginationRow');
+  const prevBtn = document.getElementById('hotelPrevBtn');
+  const nextBtn = document.getElementById('hotelNextBtn');
+  const pageInfo = document.getElementById('hotelPageInfo');
+  let activeDistrict = 'all';
+  let hotelPage = 1;
+
+  function normalize(value) {
+    return value.toLowerCase().replace(/\s+/g, '');
+  }
+
+  function hasActiveFilter() {
+    return (input?.value || '').trim() !== '' ||
+      (priceFilter?.value || 'all') !== 'all' ||
+      activeDistrict !== 'all';
+  }
+
+  function applyFilters() {
+    const query = normalize(input?.value || '');
+    const priceMode = priceFilter?.value || 'all';
+    const filtering = hasActiveFilter();
+
+    if (filtering) {
+      let visible = 0;
+      cards.forEach((card) => {
+        const low = Number(card.dataset.priceLow || 0);
+        const high = Number(card.dataset.priceHigh || 0);
+        const priceKnown = card.dataset.priceKnown === 'true';
+        const priceReference = low || high || 0;
+        const passes =
+          (activeDistrict === 'all' || card.dataset.district === activeDistrict) &&
+          (!query || normalize(card.dataset.search || '').includes(query)) &&
+          (priceMode === 'all' || (priceMode === 'unknown' && !priceKnown) ||
+           (priceMode === 'budget' && priceKnown && priceReference > 0 && priceReference < 3000) ||
+           (priceMode === 'mid' && priceKnown && priceReference >= 3000 && priceReference < 8000) ||
+           (priceMode === 'premium' && priceKnown && priceReference >= 8000)) &&
+          true;
+        card.classList.toggle('is-hidden', !passes);
+        if (passes) visible++;
+      });
+      if (count) count.textContent = `${showing} ${visible} ${visible === 1 ? featuredHotel : featuredHotels}`;
+      if (paginationRow) paginationRow.style.display = 'none';
+    } else {
+      const total = cards.length;
+      const totalPages = Math.ceil(total / PAGE);
+      hotelPage = Math.max(1, Math.min(hotelPage, totalPages));
+      const start = (hotelPage - 1) * PAGE;
+      const end = start + PAGE;
+      cards.forEach((card, i) => card.classList.toggle('is-hidden', i < start || i >= end));
+      if (count) count.textContent = `${showing} ${total} ${total === 1 ? featuredHotel : featuredHotels}`;
+      if (pageInfo) pageInfo.textContent = `${hotelPage} / ${totalPages}`;
+      if (prevBtn) prevBtn.disabled = hotelPage === 1;
+      if (nextBtn) nextBtn.disabled = hotelPage === totalPages;
+      if (paginationRow) paginationRow.style.display = total > PAGE ? '' : 'none';
+    }
+  }
+
+  prevBtn?.addEventListener('click', () => { if (hotelPage > 1) { hotelPage--; applyFilters(); document.querySelector('.hotel-browser')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
+  nextBtn?.addEventListener('click', () => { const tp = Math.ceil(cards.length / PAGE); if (hotelPage < tp) { hotelPage++; applyFilters(); document.querySelector('.hotel-browser')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
+  input?.addEventListener('input', () => { hotelPage = 1; applyFilters(); });
+  priceFilter?.addEventListener('change', () => { hotelPage = 1; applyFilters(); });
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      activeDistrict = chip.dataset.district || 'all';
+      chips.forEach((item) => item.classList.toggle('is-active', item === chip));
+      hotelPage = 1;
+      applyFilters();
+    });
+  });
+
+  applyFilters();
+</script>

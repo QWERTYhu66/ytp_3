@@ -1,0 +1,55 @@
+---
+import HotelBrowser from '../../components/hotels.astro';
+import Layout from '../../layouts/Layout.astro';
+
+const copy = {
+  kicker: '台北ステイ検索',
+  h1: '台北旅行に合う滞在拠点を見つけよう。',
+  body: '正式登録された台北のホテルを、エリア・MRTアクセス・客室数・1泊料金の目安で探せます。特定の予約名を確認したい場合は、ホテル確認ツールを使ってください。',
+  check: 'ホテルを確認',
+  browse: '宿泊先を見る',
+  registeredHotels: '正式登録ホテル',
+  districtsCovered: '対象エリア',
+  roomsListed: '掲載客室数',
+  sectionLabel: 'ホテルを探す',
+  sectionTitle: '行きたい場所の近くから選びましょう。',
+  searchPlaceholder: 'ホテル名、エリア、MRTを検索...',
+  searchAria: 'ホテル検索',
+  filterAria: 'エリアで絞り込み',
+  all: 'すべて',
+  showing: '表示中',
+  featuredHotels: '件のホテル',
+  featuredHotel: '件のホテル',
+  registered: '登録済み',
+  mrtVaries: 'MRT情報なし',
+  rooms: '室',
+  viewDetails: '詳細を見る',
+  from: '',
+  priceVaries: '料金は変動します',
+  mapAria: '台北ホテル概要',
+  starRated: '星',
+  officialSource: '公式観光データ',
+  dataPromptTitle: '元データの言語を選びますか？',
+  dataPromptBody: 'ホテル名・料金・星級は公式データを使用しています。必要であれば中国語または英語の一覧に切り替えられます。',
+  dataPromptZh: '中国語',
+  dataPromptEn: '英語',
+  priceFilterLabel: '料金',
+  starFilterLabel: '星評価',
+  priceAll: '料金指定なし',
+  priceBudget: 'NT$3,000未満',
+  priceMid: 'NT$3,000-8,000',
+  pricePremium: 'NT$8,000以上',
+  priceUnknown: '料金は変動します',
+  showMore: 'もっと見る',
+  showLess: '少なく表示',
+  starAll: '星評価指定なし',
+  starRatedOnly: '星評価あり',
+  starThreePlus: '3星以上',
+  starFourPlus: '4星以上',
+  starFivePlus: '5星',
+};
+---
+
+<Layout title="ホテル | 台北コンパス">
+  <HotelBrowser copy={copy} basePath="/jp" lang="jp" />
+</Layout>

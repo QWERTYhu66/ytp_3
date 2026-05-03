@@ -1,0 +1,244 @@
+---
+// Admin tool — generates Chinese captions for all 801 attractions via Gemini
+// Access at /admin/generate-captions
+import captionData from './caption_data.json';
+const API_KEY = import.meta.env.PUBLIC_GEMINI_API_KEY ?? '';
+const dataJson = JSON.stringify(captionData);
+---
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generate ZH Captions — Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 2rem; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+
+    .controls { background: #1e293b; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+    label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.8rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+    input[type="text"], input[type="number"] { background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 0.5rem 0.75rem; color: #e2e8f0; font-size: 0.95rem; width: 100%; }
+    input[type="text"] { width: 340px; }
+    input[type="number"] { width: 90px; }
+    .btn { padding: 0.6rem 1.4rem; border-radius: 8px; border: none; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+    .btn-start { background: #22c55e; color: #052e16; }
+    .btn-stop  { background: #ef4444; color: #fff; }
+    .btn-dl    { background: #3b82f6; color: #fff; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+
+    .progress-wrap { background: #1e293b; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+    .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+    .progress-label { font-size: 0.9rem; color: #94a3b8; }
+    .progress-count { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; }
+    .bar-bg { background: #0f172a; border-radius: 999px; height: 10px; overflow: hidden; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); border-radius: 999px; transition: width 0.3s ease; }
+    .stats { display: flex; gap: 2rem; margin-top: 0.75rem; font-size: 0.82rem; }
+    .stat { color: #64748b; }
+    .stat span { color: #e2e8f0; font-weight: 600; }
+
+    .log { background: #1e293b; border-radius: 12px; padding: 1rem 1.25rem; height: 320px; overflow-y: auto; font-size: 0.82rem; font-family: 'SF Mono', 'Fira Code', monospace; }
+    .log-entry { padding: 0.2rem 0; border-bottom: 1px solid #1a2535; display: flex; gap: 0.75rem; align-items: flex-start; }
+    .log-entry:last-child { border: none; }
+    .log-id { color: #475569; min-width: 36px; }
+    .log-name { color: #94a3b8; min-width: 180px; }
+    .log-status.ok   { color: #22c55e; }
+    .log-status.skip { color: #f59e0b; }
+    .log-status.err  { color: #ef4444; }
+    .log-desc { color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 400px; }
+  </style>
+</head>
+<body>
+  <h1>🇹🇼 Generate Chinese Captions</h1>
+  <p class="subtitle">Generates Traditional Chinese descriptions for all 801 Taipei attractions via Gemini Flash. 78 already have good descriptions and will be skipped.</p>
+
+  <div class="controls">
+    <label>
+      Gemini API Key
+      <input type="text" id="apiKey" value={API_KEY} placeholder="AIza..." />
+    </label>
+    <label>
+      Delay (ms)
+      <input type="number" id="delay" value="1200" min="500" max="5000" step="100" />
+    </label>
+    <label>
+      &nbsp;
+      <div style="display:flex;gap:0.5rem">
+        <button class="btn btn-start" id="btnStart">▶ Start</button>
+        <button class="btn btn-stop"  id="btnStop"  disabled>■ Stop</button>
+        <button class="btn btn-dl"    id="btnDl"    disabled>⬇ Download JSON</button>
+      </div>
+    </label>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-row">
+      <span class="progress-label">Progress</span>
+      <span class="progress-count" id="progCount">0 / 801</span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+    <div class="stats">
+      <div class="stat">Generated: <span id="statGen">0</span></div>
+      <div class="stat">Skipped: <span id="statSkip">0</span></div>
+      <div class="stat">Errors: <span id="statErr">0</span></div>
+      <div class="stat">ETA: <span id="statEta">—</span></div>
+    </div>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <script define:vars={{ dataJson }}>
+    const ATTRACTIONS = JSON.parse(dataJson);
+    const TOTAL = ATTRACTIONS.length;
+
+    let running = false;
+    let results = [];
+    let genCount = 0, skipCount = 0, errCount = 0;
+    let startTime = null;
+
+    const btnStart = document.getElementById('btnStart');
+    const btnStop  = document.getElementById('btnStop');
+    const btnDl    = document.getElementById('btnDl');
+    const logEl    = document.getElementById('log');
+    const barFill  = document.getElementById('barFill');
+    const progCount = document.getElementById('progCount');
+    const statGen  = document.getElementById('statGen');
+    const statSkip = document.getElementById('statSkip');
+    const statErr  = document.getElementById('statErr');
+    const statEta  = document.getElementById('statEta');
+
+    function updateProgress(done) {
+      const pct = (done / TOTAL * 100).toFixed(1);
+      barFill.style.width = pct + '%';
+      progCount.textContent = `${done} / ${TOTAL}`;
+      statGen.textContent  = genCount;
+      statSkip.textContent = skipCount;
+      statErr.textContent  = errCount;
+      if (startTime && done > 0) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const rate = done / elapsed;
+        const remaining = (TOTAL - done) / rate;
+        const mins = Math.floor(remaining / 60);
+        const secs = Math.floor(remaining % 60);
+        statEta.textContent = `${mins}m ${secs}s`;
+      }
+    }
+
+    function addLog(id, name, status, desc) {
+      const row = document.createElement('div');
+      row.className = 'log-entry';
+      row.innerHTML = `
+        <span class="log-id">#${id}</span>
+        <span class="log-name">${name}</span>
+        <span class="log-status ${status}">${status === 'ok' ? '✓ generated' : status === 'skip' ? '↷ skipped' : '✗ error'}</span>
+        <span class="log-desc">${desc || ''}</span>
+      `;
+      logEl.appendChild(row);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function callGemini(apiKey, attraction) {
+      const prompt = `你是一位台北旅遊專家。請用繁體中文為以下台北景點撰寫一段100至200字的介紹文字，適合給觀光客閱讀。
+
+景點資訊：
+- 名稱（英文）：${attraction.name_en}
+- 中文名稱：${attraction.name_zh || '（未知）'}
+- 行政區：${attraction.district}
+- 類型：${(attraction.category || []).join('、')}
+- 標籤：${(attraction.tags || []).join('、')}
+
+請只回傳介紹文字，不要加標題或額外說明，不要用markdown格式。`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 300 }
+          })
+        }
+      );
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`API ${res.status}: ${err.slice(0, 100)}`);
+      }
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    btnStart.addEventListener('click', async () => {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      if (!apiKey) { alert('Please enter your Gemini API key.'); return; }
+
+      running = true;
+      results = [];
+      genCount = skipCount = errCount = 0;
+      logEl.innerHTML = '';
+      btnStart.disabled = true;
+      btnStop.disabled = false;
+      btnDl.disabled = true;
+      startTime = Date.now();
+
+      const delay = parseInt(document.getElementById('delay').value) || 1200;
+
+      for (let i = 0; i < TOTAL; i++) {
+        if (!running) break;
+        const a = ATTRACTIONS[i];
+
+        // Already has a good description — skip
+        if (a.existing_desc_zh) {
+          results.push({ id: a.id, name_zh: a.name_zh, description_zh: a.existing_desc_zh, source: 'existing' });
+          skipCount++;
+          addLog(a.id, a.name_en, 'skip', a.existing_desc_zh.slice(0, 50) + '…');
+          updateProgress(i + 1);
+          continue;
+        }
+
+        // Generate
+        try {
+          const desc = await callGemini(apiKey, a);
+          results.push({ id: a.id, name_zh: a.name_zh, description_zh: desc, source: 'generated' });
+          genCount++;
+          addLog(a.id, a.name_en, 'ok', desc.slice(0, 50) + '…');
+        } catch (e) {
+          results.push({ id: a.id, name_zh: a.name_zh, description_zh: '', source: 'error', error: e.message });
+          errCount++;
+          addLog(a.id, a.name_en, 'err', e.message);
+        }
+
+        updateProgress(i + 1);
+
+        // Rate limit — skip delay on last item
+        if (i < TOTAL - 1 && running) await sleep(delay);
+      }
+
+      running = false;
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      btnDl.disabled = false;
+      statEta.textContent = 'Done!';
+    });
+
+    btnStop.addEventListener('click', () => {
+      running = false;
+      btnStop.disabled = true;
+      btnStart.disabled = false;
+      btnDl.disabled = results.length === 0;
+    });
+
+    btnDl.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'zh_captions_generated.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

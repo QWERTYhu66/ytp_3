@@ -1,0 +1,167 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+const DISTRICTS = [
+  '大安區', '信義區', '中山區', '中正區', '松山區',
+  '士林區', '大同區', '萬華區', '內湖區', '北投區',
+  '文山區', '南港區',
+];
+
+const INTERESTS = [
+  { id: 'food',     label: '美食',     emoji: '🍜' },
+  { id: 'culture',  label: '文化',     emoji: '🏛️' },
+  { id: 'nature',   label: '自然',     emoji: '🌿' },
+  { id: 'shopping', label: '購物',     emoji: '🛍️' },
+  { id: 'relax',    label: '放鬆療癒', emoji: '♨️' },
+  { id: 'night',    label: '夜生活',   emoji: '🌙' },
+];
+---
+
+<Layout title="行前規劃 | 台北指南針">
+  <section class="prelog-hero">
+    <div class="prelog-inner">
+      <div class="section-label">規劃行程</div>
+      <h1 class="prelog-h1">告訴我們你喜歡什麼</h1>
+      <p class="prelog-sub">
+        你的偏好只會存在這個裝置上（無需註冊），AI 助手會根據它從台北指南針的清單中挑選更符合你節奏的地點。
+      </p>
+
+      <form id="prefs-form" class="prefs-form">
+        <fieldset class="prefs-group">
+          <legend>你對什麼有興趣？（可選）</legend>
+          <div class="chip-grid" data-field="interests">
+            {INTERESTS.map((i) => (
+              <button type="button" class="chip" data-value={i.id}>
+                <span aria-hidden="true">{i.emoji}</span> {i.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset class="prefs-group">
+          <legend>偏好的區域（可選）</legend>
+          <div class="chip-grid" data-field="districts">
+            {DISTRICTS.map((d) => (
+              <button type="button" class="chip" data-value={d}>{d}</button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset class="prefs-group">
+          <legend>旅行節奏</legend>
+          <div class="radio-row" data-field="pace">
+            <button type="button" class="chip" data-value="relaxed">悠閒</button>
+            <button type="button" class="chip" data-value="balanced">均衡</button>
+            <button type="button" class="chip" data-value="packed">緊湊</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="prefs-group days-group">
+          <legend>幾天？</legend>
+          <input type="number" id="days-input" min="1" max="14" value="3" required />
+        </fieldset>
+
+        <div class="prefs-actions">
+          <button type="submit" class="btn-primary">
+            <span class="material-symbols-outlined">check</span>
+            儲存並開始規劃
+          </button>
+          <button type="button" id="prefs-reset" class="btn-ghost">清除偏好</button>
+        </div>
+      </form>
+
+      <p id="prefs-status" class="prefs-status"></p>
+    </div>
+  </section>
+
+  <style is:global>
+    .prelog-hero { min-height: 100vh; display: flex; align-items: center; padding: 96px 2.5rem 4rem; background: var(--parchment, #FDF6E3); }
+    .prelog-inner { max-width: 760px; margin: 0 auto; width: 100%; }
+    .prelog-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; color: var(--ink, #1a1a2e); margin: 0.5rem 0 1rem; }
+    .prelog-sub { font-size: 1.05rem; color: var(--text-secondary, #555); line-height: 1.7; margin-bottom: 2.5rem; }
+    .prefs-form { display: flex; flex-direction: column; gap: 2rem; }
+    .prefs-group { border: none; padding: 0; margin: 0; }
+    .prefs-group legend { font-weight: 700; font-size: 0.95rem; color: var(--ink, #1a1a2e); margin-bottom: 0.6rem; padding: 0; }
+    .chip-grid, .radio-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .chip {
+      background: #fff; border: 1px solid rgba(192,57,43,0.25); color: var(--ink, #1a1a2e);
+      padding: 0.5rem 0.9rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem;
+      font-family: inherit; transition: all 160ms ease;
+    }
+    .chip:hover { border-color: var(--vermillion, #c0392b); }
+    .chip.is-active { background: var(--vermillion, #c0392b); color: #fff; border-color: var(--vermillion, #c0392b); }
+    .days-group input { width: 5rem; padding: 0.5rem 0.75rem; border: 1px solid rgba(192,57,43,0.25); border-radius: 0.5rem; font-size: 1rem; font-family: inherit; }
+    .prefs-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .prefs-status { margin-top: 1rem; font-size: 0.9rem; color: var(--vermillion, #c0392b); min-height: 1.25rem; }
+  </style>
+
+  <script>
+    import { loadPrefs, savePrefs, PREFS_KEY, type Prefs } from '../../lib/ai';
+
+    const form = document.getElementById('prefs-form') as HTMLFormElement;
+    const statusEl = document.getElementById('prefs-status')!;
+    const daysInput = document.getElementById('days-input') as HTMLInputElement;
+
+    const existing = loadPrefs();
+    if (existing) {
+      if (existing.days) daysInput.value = String(existing.days);
+      for (const btn of form.querySelectorAll<HTMLButtonElement>('.chip')) {
+        const field = btn.closest('[data-field]')?.getAttribute('data-field');
+        const val = btn.getAttribute('data-value');
+        if (!field || !val) continue;
+        if (field === 'interests' && existing.interests.includes(val)) btn.classList.add('is-active');
+        if (field === 'districts' && existing.districts.includes(val)) btn.classList.add('is-active');
+        if (field === 'pace' && existing.pace === val) btn.classList.add('is-active');
+      }
+    }
+
+    form.addEventListener('click', (ev) => {
+      const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('.chip');
+      if (!btn) return;
+      const field = btn.closest('[data-field]')?.getAttribute('data-field');
+      if (!field) return;
+      if (field === 'pace') {
+        for (const b of form.querySelectorAll<HTMLButtonElement>('[data-field="pace"] .chip')) {
+          b.classList.toggle('is-active', b === btn);
+        }
+      } else {
+        btn.classList.toggle('is-active');
+      }
+    });
+
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const pick = (field: string) =>
+        Array.from(form.querySelectorAll<HTMLButtonElement>(`[data-field="${field}"] .chip.is-active`))
+          .map((b) => b.getAttribute('data-value')!)
+          .filter(Boolean);
+      const paceVal = pick('pace')[0] ?? '';
+      if (!paceVal) {
+        statusEl.textContent = '請先選擇旅行節奏。';
+        return;
+      }
+      const daysVal = Number(daysInput.value);
+      if (!Number.isFinite(daysVal) || daysVal < 1 || daysVal > 14) {
+        statusEl.textContent = '請輸入旅行天數（1-14 天）。';
+        daysInput.focus();
+        return;
+      }
+      const prefs: Prefs = {
+        interests: pick('interests'),
+        districts: pick('districts'),
+        pace: paceVal as Prefs['pace'],
+        days: Math.round(daysVal),
+      };
+      savePrefs(prefs);
+      statusEl.textContent = '已儲存！正在帶你前往探索頁…';
+      setTimeout(() => { window.location.href = '/zh/explore'; }, 600);
+    });
+
+    document.getElementById('prefs-reset')?.addEventListener('click', () => {
+      localStorage.removeItem(PREFS_KEY);
+      for (const b of form.querySelectorAll<HTMLButtonElement>('.chip')) b.classList.remove('is-active');
+      daysInput.value = '3';
+      statusEl.textContent = '已清除偏好。';
+    });
+  </script>
+</Layout>

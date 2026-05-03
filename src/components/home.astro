@@ -1,0 +1,913 @@
+---
+import attractionsRaw from '../../scripts/pages/attractions_en.json';
+
+const MAX_BENTO_CARDS = 4;
+const attractions = attractionsRaw.filter((attraction) => Number(attraction.suggestion_level) === 3);
+const getCategoryLabel = (cat: string[]) => {
+  const normalized = (cat || []).map((v) => String(v || '').toLowerCase());
+  if (normalized.some((v) => v.includes('food') || v.includes('gourmet'))) return 'Food & Drink';
+  if (normalized.some((v) => v.includes('nature'))) return 'Nature';
+  if (normalized.some((v) => v.includes('culture'))) return 'Culture';
+  if (normalized.some((v) => v.includes('shopping'))) return 'Shopping';
+  if (normalized.some((v) => v.includes('relax') || v.includes('leisure') || v.includes('hot spring'))) return 'Relaxation';
+  if (normalized.some((v) => v.includes('night'))) return 'Night Scene';
+  return cat[0] || 'Attraction';
+};
+
+const bentoCards = attractions.slice(0, MAX_BENTO_CARDS).map((attraction, index) => {
+  const sizeClass = index === 0 ? 'feature' : index === 1 ? 'medium' : 'small-card';
+  const delayClass = `reveal-delay-${index + 1}`;
+  return { ...attraction, sizeClass, delayClass, categoryLabel: getCategoryLabel(attraction.category) };
+});
+---
+
+<section class="hero">
+    <div class="hero-bg-circle c1"></div>
+    <div class="hero-bg-circle c2"></div>
+    <div class="hero-bg-circle c3"></div>
+    <span class="hero-vertical-text">台北 · TAIPEI · EXPLORE</span>
+
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-eyebrow">Discover the Heart of Taiwan</div>
+        <h1 class="hero-h1">
+          <span>Find the</span><br />
+          <span class="accent">Soul</span>
+          <span> of Taipei</span>
+        </h1>
+        <p class="hero-desc">
+          Feel the electric blend of ancient culture and neon-lit modernity that is Taipei. From misty mountain teahouses in Yangmingshan to the rowdy night markets of Dadaocheng — find your own city rhythm.
+        </p>
+        <div class="hero-tags">
+          <span class="tag tag-red">Cultural Tours</span>
+          <span class="tag tag-jade">Nature Hikes</span>
+          <span class="tag tag-gold">Food Routes</span>
+          <span class="tag tag-red">Night Markets</span>
+        </div>
+                <div class="hero-weather-line">
+          <span id="hero-weather" class="hero-weather" style="display:none" aria-live="polite"></span>
+        </div>
+
+        <div class="hero-actions">
+          <a href="/prelog" class="btn-primary" style="padding:0.65rem 1.2rem;font-size:0.875rem">
+            <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">map</span>
+            Start Planning
+          </a>
+          <button class="btn-ghost" onclick="document.getElementById('bento').scrollIntoView({behavior:'smooth'})">
+            Explore Places
+          </button>
+          <button class="btn-near-me" id="near-me-btn" type="button">
+            <span class="material-symbols-outlined near-me-icon" style="font-size:17px">near_me</span>
+            <span id="near-me-label">Near Me</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-image-wrap">
+        <div class="hero-image-frame">
+          <div class="img-corner tl"></div>
+          <div class="img-corner br"></div>
+          <img src="https://cdn.pixabay.com/photo/2021/11/30/08/12/taiwan-6834738_1280.jpg" alt="Taipei 101" loading="eager" />
+        </div>
+        <div class="stats-card">
+          <div class="stat-item">
+            <span class="stat-num">12</span>
+            <span class="stat-label">Districts</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">800+</span>
+            <span class="stat-label">Attractions</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">24hr</span>
+            <span class="stat-label">City Life</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bento-section" id="bento">
+    <div class="section-inner">
+      <div class="bento-header reveal">
+        <div>
+          <div class="section-label" id="bento-label">Popular Destinations</div>
+          <h2 class="section-h2" id="bento-title">Must-See Taipei</h2>
+          <p class="section-sub" id="bento-sub">Handpicked experiences that capture the most authentic side of the city.</p>
+          <div class="pref-banner" id="pref-banner" hidden>
+            <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">auto_awesome</span>
+            <span id="pref-banner-text">Personalised for you</span>
+            <a href="/prelog" class="pref-edit">Edit</a>
+          </div>
+        </div>
+        <a class="btn-ghost" href="/explore">Explore all</a>
+      </div>
+      <div id="nearby-results" style="display:none;margin-bottom:2rem"></div>
+
+      <div class="bento-grid" id="bento-grid" data-attractions={JSON.stringify(attractions)}>
+        {bentoCards.map((card) => (
+          <div 
+            class={`bento-card ${card.sizeClass} reveal ${card.delayClass}`}
+            data-interests={card.category.join(',')}
+            data-district={card.district}
+            data-id={card.id}
+          >
+            {card.sizeClass === 'feature' && (
+              <div class="card-img">
+                <span class="card-badge badge-history">{card.categoryLabel}</span>
+                <img src={card.image} alt={card.name} />
+              </div>
+            )}
+            {card.sizeClass === 'feature' && (
+              <div class="card-body">
+                <h3>{card.name}</h3>
+                <p>{card.description?.slice(0, 150)}...</p>
+                <a class="card-link" href={'/place/a/' + card.id}>
+                  Explore
+                  <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+                </a>
+              </div>
+            )}
+            {card.sizeClass === 'medium' && (
+              <>
+                <img class="bg-img" src={card.image} alt={card.name} />
+                <div class="card-content">
+                  <div class="card-label">{card.categoryLabel}</div>
+                  <h3>{card.name}</h3>
+                  <p>{card.description?.slice(0, 80)}...</p>
+                  <a class="card-link" style="margin-top:0.8rem;color:#fff" href={'/place/a/' + card.id}>
+                    Explore
+                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+                  </a>
+                </div>
+              </>
+            )}
+            {card.sizeClass === 'small-card' && (
+              <>
+                <div class="icon-wrap red">
+                  <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">place</span>
+                </div>
+                <h4>{card.name}</h4>
+                <p>{card.description?.slice(0, 80)}...</p>
+                <a class="small-card-btn red" href={'/place/a/' + card.id}>Explore →</a>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Schedule mini-widget (rendered from localStorage) -->
+  <section class="schedule-widget-section" id="scheduleWidgetSection" style="display:none">
+    <div class="section-inner">
+      <div class="schedule-widget-inner">
+        <div class="trip-widget-left">
+          <div class="section-label">My Schedule</div>
+          <h2 class="trip-widget-h2">Your Taipei Plan</h2>
+          <p class="trip-widget-sub" id="scheduleWidgetSub">No schedule yet.</p>
+          <a href="/trip" class="trip-widget-btn">
+            <span class="material-symbols-outlined">calendar_month</span>
+            View Schedule
+          </a>
+        </div>
+        <div class="schedule-widget-days" id="scheduleWidgetDays"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trip mini-widget (rendered from localStorage) -->
+  <section class="trip-widget-section" id="tripWidgetSection" style="display:none">
+    <div class="section-inner">
+      <div class="trip-widget-inner">
+        <div class="trip-widget-left">
+          <div class="section-label">My Trip</div>
+          <h2 class="trip-widget-h2">Your Taipei Itinerary</h2>
+          <p class="trip-widget-sub" id="tripWidgetSub">No places saved yet.</p>
+          <a href="/trip" class="trip-widget-btn">
+            <span class="material-symbols-outlined">map</span>
+            Open Trip Planner
+          </a>
+        </div>
+        <div class="trip-widget-thumbs" id="tripWidgetThumbs"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <style is:global>
+    /* ── PAGE-SPECIFIC CSS ── */
+    /* HERO */
+    .hero { height: 100vh; display: flex; align-items: center; padding: 72px 2.5rem 0; position: relative; overflow: hidden; background: var(--parchment); }
+    .hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; padding: 5.5rem 0 5.5rem; }
+    .hero-bg-circle { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+    .hero-bg-circle.c1 { width: 600px; height: 600px; background: rgba(192,57,43,0.08); top: -100px; right: -100px; animation: float1 12s ease-in-out infinite; }
+    .hero-bg-circle.c2 { width: 400px; height: 400px; background: rgba(212,160,23,0.07); bottom: 0; left: 10%; animation: float2 15s ease-in-out infinite; }
+    .hero-bg-circle.c3 { width: 300px; height: 300px; background: rgba(30,107,82,0.06); top: 30%; left: 50%; animation: float1 18s ease-in-out infinite reverse; }
+    @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.05); } 66% { transform: translate(-20px,30px) scale(0.95); } }
+    @keyframes float2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-40px,-30px); } }
+
+    .hero-vertical-text { position: absolute; right: 3.5rem; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-family: 'Noto Serif TC', serif; font-size: 0.7rem; letter-spacing: 0.3em; color: var(--text-muted); opacity: 0.4; pointer-events: none; }
+
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--vermillion); margin-bottom: 1.2rem; animation: fadeInUp 0.8s ease both; }
+    .hero-eyebrow::before, .hero-eyebrow::after { content: ''; display: block; width: 24px; height: 1px; background: var(--vermillion); opacity: 0.6; }
+    .hero-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 900; line-height: 1.1; color: var(--ink); margin-bottom: 1.5rem; animation: fadeInUp 0.8s ease 0.1s both; }
+    .hero-h1 .accent { color: var(--vermillion); position: relative; display: inline-block; }
+    .hero-h1 .accent::after { content: ''; position: absolute; bottom: 4px; left: 0; right: 0; height: 3px; background: var(--gold); transform: scaleX(0); transform-origin: left; animation: underlineReveal 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.9s forwards; }
+    @keyframes underlineReveal { to { transform: scaleX(1); } }
+    .hero-desc { font-size: 1.05rem; line-height: 1.85; color: var(--text-secondary); margin-bottom: 2rem; max-width: 460px; animation: fadeInUp 0.8s ease 0.2s both; word-wrap: break-word; overflow-wrap: break-word; }
+
+    .hero-tags { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2.5rem; animation: fadeInUp 0.8s ease 0.3s both; }
+    .tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.35rem 0.9rem; border-radius: 2px; border: 1px solid; cursor: default; transition: all 0.2s ease; }
+    .tag-red { background: rgba(192,57,43,0.08); color: var(--vermillion); border-color: rgba(192,57,43,0.25); }
+    .tag-red:hover { background: var(--vermillion); color: #fff; }
+    .tag-jade { background: rgba(30,107,82,0.08); color: var(--jade); border-color: rgba(30,107,82,0.25); }
+    .tag-jade:hover { background: var(--jade); color: #fff; }
+    .tag-gold { background: rgba(212,160,23,0.1); color: #8B6914; border-color: rgba(212,160,23,0.3); }
+    .tag-gold:hover { background: var(--gold); color: #fff; }
+    .hero-actions { display: flex; flex-wrap: nowrap; gap: 0.75rem; align-items: center; animation: fadeInUp 0.8s ease 0.4s both; }
+
+    .hero-image-wrap { position: relative; animation: fadeInRight 1s ease 0.3s both; }
+    @keyframes fadeInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    .hero-image-frame { position: relative; border-radius: 4px; overflow: hidden; }
+    .hero-image-frame::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(160deg, transparent 60%, rgba(192,57,43,0.1) 100%); }
+    .hero-image-frame img { width: 100%; height: 520px; object-fit: cover; object-position: top; display: block; }
+    .img-corner { position: absolute; width: 40px; height: 40px; border-color: var(--gold); border-style: solid; z-index: 2; }
+    .img-corner.tl { top: -8px; left: -8px; border-width: 2px 0 0 2px; }
+    .img-corner.br { bottom: -8px; right: -8px; border-width: 0 2px 2px 0; }
+
+    .stats-card { position: absolute; bottom: calc(0.25rem - 2em); right: calc(0.25rem - 1.5em); background: var(--parchment); border: 1px solid rgba(192,57,43,0.15); border-radius: 4px; padding: 0.885rem 1.26rem; box-shadow: 0 20px 60px rgba(26,26,46,0.12); display: flex; gap: 1.78rem; z-index: 3; animation: float3 5s ease-in-out infinite; white-space: nowrap; }
+    @keyframes float3 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .stat-item { text-align: center; }
+    .stat-num { font-family: 'Noto Serif TC', serif; font-size: 1.32rem; font-weight: 900; color: var(--vermillion); display: block; line-height: 1; }
+    .stat-label { font-size: 0.575rem; font-weight: 500; letter-spacing: 0.08em; color: var(--text-muted); margin-top: 2px; }
+
+    /* SECTION COMMON */
+    section { padding: 6rem 2.5rem; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-label { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--vermillion); margin-bottom: 0.6rem; }
+    .section-label::before { content: ''; width: 20px; height: 1px; background: var(--vermillion); }
+    .section-h2 { font-family: 'Noto Serif TC', serif; font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 900; color: var(--ink); line-height: 1.2; }
+    .section-sub { font-size: 0.95rem; color: var(--text-secondary); margin-top: 0.6rem; line-height: 1.7; }
+
+    /* BENTO */
+    .bento-section { background: var(--parchment-dark); position: relative; }
+    .bento-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, var(--vermillion), transparent); opacity: 0.3; }
+    .bento-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem; }
+
+    .bento-grid { display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: auto auto; gap: 1.25rem; }
+    .bento-card { background: var(--warm-white); border: 1px solid rgba(192,57,43,0.08); border-radius: 4px; overflow: hidden; transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.35s ease, border-color 0.35s ease; word-wrap: break-word; overflow-wrap: break-word; }
+    .bento-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(192,57,43,0.1); border-color: rgba(192,57,43,0.2); }
+    .bento-card.feature { grid-column: span 2; grid-row: span 2; }
+    .bento-card.medium { grid-column: span 2; }
+    .bento-card .card-img { overflow: hidden; position: relative; }
+    .bento-card.feature .card-img { height: 340px; }
+    .bento-card.medium .card-img { height: 200px; }
+    .bento-card .card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .bento-card:hover .card-img img { transform: scale(1.07); }
+    .card-badge { position: absolute; top: 1rem; left: 1rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.7rem; border-radius: 2px; z-index: 2; }
+    .badge-history { background: var(--ink); color: var(--gold-light); }
+    .bento-card .card-body { padding: 1.4rem 1.6rem 1.6rem; position: relative; }
+    .bento-card.feature .card-body { padding: 1.6rem 2rem 2rem; }
+    .card-body h3 { font-family: 'Noto Serif TC', serif; font-size: 1.25rem; font-weight: 700; color: var(--ink); margin-bottom: 0.5rem; }
+    .bento-card.feature .card-body h3 { font-size: 1.5rem; }
+    .card-body p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.75; margin-bottom: 1.2rem; word-wrap: break-word; overflow-wrap: break-word; }
+    .card-link { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; color: var(--vermillion); background: none; border: none; cursor: pointer; padding: 0; transition: gap 0.2s ease; text-decoration: none; }
+    .card-link:hover { gap: 0.7rem; }
+
+    .bento-card.medium { position: relative; overflow: hidden; min-height: 260px; }
+    .bento-card.medium .bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .bento-card.medium:hover .bg-img { transform: scale(1.07); }
+    .bento-card.medium .card-content { position: absolute; bottom: 0; left: 0; right: 0; z-index: 1; padding: 1.4rem 1.6rem; background: linear-gradient(to top, rgba(26,26,46,0.92) 0%, rgba(26,26,46,0.45) 65%, transparent); }
+    .bento-card.medium .card-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 0.4rem; }
+    .bento-card.medium h3 { font-family: 'Noto Serif TC', serif; font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem; }
+    .bento-card.medium p { font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.65; }
+
+    .small-card { display: flex; flex-direction: column; padding: 1.4rem; }
+    .small-card .icon-wrap { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; flex-shrink: 0; }
+    .icon-wrap.red { background: rgba(192,57,43,0.1); color: var(--vermillion); }
+    .icon-wrap.jade { background: rgba(30,107,82,0.1); color: var(--jade); }
+    .small-card h4 { font-family: 'Noto Serif TC', serif; font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem; }
+    .small-card p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; flex: 1; word-wrap: break-word; overflow-wrap: break-word; }
+    .small-card-btn { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(192,57,43,0.08); background: none; border-left: none; border-right: none; border-bottom: none; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-align: left; width: 100%; transition: opacity 0.2s, letter-spacing 0.2s; }
+    .small-card-btn:hover { letter-spacing: 0.15em; }
+    .small-card-btn.red { color: var(--vermillion); }
+    .small-card-btn.jade { color: var(--jade); border-top-color: rgba(30,107,82,0.1); }
+
+    .nature-card { position: relative; overflow: hidden; background: rgba(30,107,82,0.05); }
+    .nature-card .card-content { position: relative; z-index: 2; padding: 1.6rem; max-width: 48%; }
+    .nature-card .bg-img { position: absolute; right: 0; bottom: 0; width: 55%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.3s; }
+    .nature-card:hover .bg-img { opacity: 1; }
+    .nature-card .card-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--jade); margin-bottom: 0.5rem; }
+    .nature-card h3 { font-family: 'Noto Serif TC', serif; font-size: 1.3rem; font-weight: 700; color: var(--ink); margin-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word; }
+    .nature-card p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.7; word-wrap: break-word; overflow-wrap: break-word; }
+
+    /* TRIP WIDGET */
+    .trip-widget-section { background: linear-gradient(135deg, #1a1a2e 0%, #2d1b3d 100%); padding: 3rem 0; }
+    .trip-widget-inner { display: flex; align-items: center; gap: 3rem; flex-wrap: wrap; }
+    .trip-widget-left { flex: 1; min-width: 220px; }
+    .trip-widget-left .section-label { color: rgba(255,255,255,0.55); }
+    .trip-widget-left .section-label::before, .trip-widget-left .section-label::after { background: rgba(255,255,255,0.4); }
+    .trip-widget-h2 { font-family: 'Noto Serif TC', serif; font-size: clamp(1.4rem, 3vw, 2rem); color: #fff; margin: 0.3rem 0 0.5rem; }
+    .trip-widget-sub { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .trip-widget-btn { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--vermillion); color: #fff; padding: 0.65rem 1.3rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.88rem; transition: filter 0.15s; }
+    .trip-widget-btn:hover { filter: brightness(1.1); }
+    .trip-widget-btn .material-symbols-outlined { font-size: 17px; }
+    .trip-widget-thumbs { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    .trip-thumb { width: 80px; height: 80px; border-radius: 12px; background: rgba(255,255,255,0.1) center/cover no-repeat; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); text-decoration: none; border: 1.5px solid rgba(255,255,255,0.15); transition: transform 0.15s; }
+    .trip-thumb:hover { transform: scale(1.05); }
+    .trip-thumb .material-symbols-outlined { font-size: 24px; }
+    .trip-thumb-more { font-size: 1rem; font-weight: 700; color: #fff; background: rgba(192,57,43,0.4); border-color: var(--vermillion); }
+
+    .schedule-widget-section { background: linear-gradient(135deg, #0e2438 0%, #152b1e 100%); padding: 3rem 0; }
+    .schedule-widget-inner { display: flex; align-items: flex-start; gap: 3rem; flex-wrap: wrap; }
+    .schedule-widget-days { display: flex; gap: 0.75rem; flex-wrap: wrap; flex: 1; }
+    .sched-day-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 0.75rem 1rem; min-width: 130px; max-width: 180px; }
+    .sched-day-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.2rem; }
+    .sched-day-date { font-size: 0.72rem; color: rgba(255,255,255,0.55); font-weight: 600; margin-bottom: 0.5rem; }
+    .sched-place { font-size: 0.73rem; color: rgba(255,255,255,0.85); padding: 0.18rem 0; border-bottom: 1px solid rgba(255,255,255,0.07); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sched-place:last-child { border-bottom: none; }
+    .sched-more { font-size: 0.68rem; color: rgba(255,255,255,0.35); font-style: italic; margin-top: 0.2rem; }
+
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .bento-grid { grid-template-columns: repeat(2,1fr); }
+      .bento-card.feature, .bento-card.medium { grid-column: span 2; }
+    }
+    @media (max-width: 768px) {
+      .hero { padding: 72px 1.5rem 0; }
+      .hero-inner { grid-template-columns: 1fr; gap: 2rem; padding: 3rem 0 6rem; }
+      .hero-image-wrap { order: -1; }
+      .hero-image-frame img { height: 300px; }
+      .stats-card { bottom: calc(0.25rem - 2em); right: calc(0.25rem - 1.5em); }
+      .hero-vertical-text { display: none; }
+      section { padding: 4rem 1.5rem; }
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-card.feature, .bento-card.medium { grid-column: span 1; }
+      .nature-card p { max-width: 100%; }
+    }
+    @media (max-width: 480px) {
+      .hero-h1 { font-size: 2.2rem; }
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* Near Me button */
+    .btn-near-me { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.65rem 1.2rem; border-radius: 999px; border: 1.5px solid rgba(192,57,43,0.35); background: rgba(192,57,43,0.06); color: var(--vermillion); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s; white-space: nowrap; }
+    .btn-near-me:hover { background: rgba(192,57,43,0.12); border-color: var(--vermillion); transform: translateY(-1px); }
+    .btn-near-me:disabled { opacity: 0.55; cursor: default; transform: none; }
+    .btn-near-me .near-me-icon { animation: none; }
+
+    /* Preferences banner */
+    .pref-banner { margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--vermillion); background: rgba(192,57,43,0.08); padding: 0.35rem 0.75rem; border-radius: 999px; }
+    .pref-banner .pref-edit { margin-left: 0.3rem; font-weight: 700; color: var(--vermillion); text-decoration: underline; font-size: 0.75rem; }
+    .bento-card.pref-match { outline: 2px solid rgba(192,57,43,0.35); outline-offset: 2px; }
+    .hero-weather { display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1rem; padding: 0.35rem 0.85rem; border-radius: 999px; background: rgba(30,107,82,0.08); border: 1px solid rgba(30,107,82,0.18); color: var(--jade); font-size: 0.82rem; font-weight: 700; }
+
+    /* ── Nearby Panel ────────────────────────────────────── */
+    .nearby-panel { position: relative; overflow: hidden; background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 16px; padding: 1.5rem 1.5rem 1.5rem; box-shadow: 0 12px 40px rgba(26,26,46,0.07); }
+    .nearby-panel::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--vermillion) 0%, var(--gold) 50%, var(--jade) 100%); border-radius: 16px 16px 0 0; }
+
+    .nearby-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+    .nearby-head-left { display: flex; flex-direction: column; gap: 0.2rem; }
+    .nearby-kicker { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--vermillion); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+    .nearby-panel h3 { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 900; color: var(--ink); margin: 0; line-height: 1.2; }
+    .nearby-panel .nearby-sub { color: var(--text-secondary); font-size: 0.82rem; margin: 0; line-height: 1.5; }
+    .nearby-privacy { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--jade); background: rgba(30,107,82,0.07); border: 1px solid rgba(30,107,82,0.15); border-radius: 999px; padding: 0.35rem 0.7rem; font-size: 0.72rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+
+    /* Cards grid */
+    .nearby-list { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; }
+    .nearby-card { position: relative; display: flex; flex-direction: column; overflow: hidden; background: var(--parchment); border: 1px solid rgba(192,57,43,0.1); border-radius: 12px; color: inherit; text-decoration: none; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+    .nearby-card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(26,26,46,0.12); border-color: rgba(192,57,43,0.3); }
+
+    .nearby-image { position: relative; height: 130px; overflow: hidden; background: rgba(192,57,43,0.06); flex-shrink: 0; }
+    .nearby-image img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s ease; }
+    .nearby-card:hover .nearby-image img { transform: scale(1.06); }
+    .nearby-image-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(192,57,43,0.25); }
+    .nearby-image-placeholder .material-symbols-outlined { font-size: 2.5rem; }
+
+    .nearby-distance { position: absolute; top: 0.6rem; right: 0.6rem; display: inline-flex; align-items: center; gap: 0.2rem; color: #fff; background: rgba(26,26,46,0.72); backdrop-filter: blur(6px); border-radius: 999px; padding: 0.22rem 0.5rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.02em; }
+
+    .nearby-body { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.9rem 1rem 1rem; flex: 1; }
+    .nearby-cat { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--vermillion); }
+    .nearby-card strong { font-family: 'Noto Serif TC', serif; font-size: 0.97rem; font-weight: 700; line-height: 1.25; color: var(--ink); display: block; }
+    .nearby-card small { color: var(--text-secondary); line-height: 1.5; font-size: 0.76rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+    .nearby-go { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--vermillion); font-size: 0.75rem; font-weight: 700; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(192,57,43,0.08); }
+
+    /* Empty / error states */
+    .nearby-empty { text-align: center; padding: 2rem 1rem; color: var(--text-secondary); }
+    .nearby-empty .material-symbols-outlined { font-size: 2.5rem; color: rgba(192,57,43,0.25); display: block; margin-bottom: 0.5rem; }
+    .nearby-empty h3 { font-family: 'Noto Serif TC', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: 0.3rem; }
+    .nearby-empty p { font-size: 0.85rem; }
+
+    @media (max-width: 760px) {
+      .nearby-list { grid-template-columns: 1fr 1fr; }
+      .nearby-head { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 480px) {
+      .nearby-list { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <script>
+    import attractionsRaw from '../../scripts/pages/attractions_en.json';
+    import { getUserLocation, getNearbyAttractions, formatDistance, guessDistrict, saveCachedUserLocation } from '../lib/location';
+    import { fetchWeather, weatherBadge, buildWeatherHint } from '../lib/weather';
+
+    const attractions = (attractionsRaw as any[]).filter((attraction) => Number(attraction.suggestion_level) === 3);
+
+    const heroWeather = document.getElementById('hero-weather');
+    const nearBtn = document.getElementById('near-me-btn') as HTMLButtonElement | null;
+    const nearLabel = document.getElementById('near-me-label');
+    const nearbyResults = document.getElementById('nearby-results');
+
+    function escapeHtml(value: string) {
+      return String(value).replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
+      ));
+    }
+
+    function categoryLabel(categories: string[] = []) {
+      const text = categories.join(' ').toLowerCase();
+      if (text.includes('gourmet')) return 'Food';
+      if (text.includes('shopping')) return 'Shopping';
+      if (text.includes('culture')) return 'Culture';
+      if (text.includes('nature')) return 'Nature';
+      if (text.includes('leisure')) return 'Leisure';
+      return categories[0] || 'Attraction';
+    }
+
+    function shortDescription(description = '') {
+      const trimmed = description.replace(/\s+/g, ' ').trim();
+      return trimmed.length > 92 ? `${trimmed.slice(0, 92)}...` : trimmed;
+    }
+
+    async function showTaipeiWeather() {
+      if (!heroWeather) return;
+      try {
+        const weather = await fetchWeather(25.0375, 121.5637);
+        heroWeather.textContent = weatherBadge(weather);
+        heroWeather.style.display = '';
+      } catch {
+        heroWeather.style.display = 'none';
+      }
+    }
+
+    function renderNearby(user: { lat: number; lng: number }, weatherHint?: string) {
+      if (!nearbyResults) return;
+      // getNearbyAttractions(all, user, radiusKm) — no options object
+      const nearby = getNearbyAttractions(attractions as any, user, 4).slice(0, 6);
+      const district = guessDistrict(attractions as any, user);
+
+      if (!nearby.length) {
+        nearbyResults.innerHTML = `
+          <div class="nearby-panel">
+            <div class="nearby-empty">
+              <span class="material-symbols-outlined">travel_explore</span>
+              <h3>No guide spots within 4 km</h3>
+              <p>Try the AI assistant for a wider search across all of Taipei.</p>
+            </div>
+          </div>`;
+        nearbyResults.style.display = '';
+        return;
+      }
+
+      nearbyResults.innerHTML = `
+        <div class="nearby-panel">
+          <div class="nearby-head">
+            <div class="nearby-head-left">
+              <div class="nearby-kicker">
+                <span class="material-symbols-outlined" style="font-size:13px">near_me</span>
+                Around You Now
+              </div>
+              <h3>${district ? `In ${escapeHtml(district)}` : 'Nearby Taipei'}</h3>
+              <p class="nearby-sub">${weatherHint ? escapeHtml(weatherHint) : 'Closest attractions from our guide, sorted by walking distance.'}</p>
+            </div>
+            <span class="nearby-privacy">
+              <span class="material-symbols-outlined" style="font-size:13px">lock</span>
+              Stays in browser
+            </span>
+          </div>
+          <div class="nearby-list">
+            ${nearby.map((place) => `
+              <a class="nearby-card" href="/place/a/${encodeURIComponent(place.id)}">
+                <div class="nearby-image">
+                  ${place.image
+                    ? `<img src="${escapeHtml(place.image)}" alt="${escapeHtml(place.name)}" loading="lazy" />`
+                    : `<div class="nearby-image-placeholder"><span class="material-symbols-outlined">landscape</span></div>`
+                  }
+                  <span class="nearby-distance">
+                    <span class="material-symbols-outlined" style="font-size:12px">directions_walk</span>
+                    ${formatDistance(place._distKm)}
+                  </span>
+                </div>
+                <div class="nearby-body">
+                  <span class="nearby-cat">${escapeHtml(categoryLabel(place.category || []))}</span>
+                  <strong>${escapeHtml(place.name)}</strong>
+                  <small>${escapeHtml(shortDescription(place.description))}</small>
+                  <span class="nearby-go">
+                    Explore
+                    <span class="material-symbols-outlined" style="font-size:14px">arrow_forward</span>
+                  </span>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </div>`;
+      nearbyResults.style.display = '';
+    }
+
+    async function handleNearMe() {
+      if (!nearBtn || !nearLabel) return;
+      nearBtn.disabled = true;
+      nearLabel.textContent = 'Locating…';
+      try {
+        const pos = await getUserLocation(8000);
+        saveCachedUserLocation(pos);
+        let weatherHint: string | undefined;
+        try {
+          const weather = await fetchWeather(pos.lat, pos.lng);
+          weatherHint = buildWeatherHint(weather) as string;
+          if (heroWeather) {
+            heroWeather.textContent = weatherBadge(weather);
+            heroWeather.style.display = '';
+          }
+        } catch { /* weather optional */ }
+        renderNearby(pos, weatherHint);
+        nearbyResults?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (err) {
+        if (nearbyResults) {
+          nearbyResults.innerHTML = `
+            <div class="nearby-panel">
+              <div class="nearby-empty">
+                <span class="material-symbols-outlined">location_off</span>
+                <h3>Location unavailable</h3>
+                <p>${escapeHtml(err instanceof Error ? err.message : 'Enable location access to see nearby attractions.')}</p>
+              </div>
+            </div>`;
+          nearbyResults.style.display = '';
+        }
+      } finally {
+        nearBtn.disabled = false;
+        nearLabel.textContent = 'Near Me';
+      }
+    }
+
+    showTaipeiWeather();
+    nearBtn?.addEventListener('click', handleNearMe);
+  </script>
+
+  <script is:inline>
+    // ── RANDOMIZATION + PERSONALIZATION ──
+    // Reads preferences from /prelog, shuffles cards randomly when no prefs, reorders by interests/districts when prefs exist.
+    (function initBentoCards() {
+      try {
+      const grid = document.querySelector('#bento-grid');
+      if (!grid) return;
+
+      let attractionsData = [];
+      try {
+        attractionsData = JSON.parse(grid.getAttribute('data-attractions') || '[]');
+      } catch (e) {
+        // Keep SSR cards visible even if JSON parsing fails.
+        document.querySelectorAll('#bento-grid .bento-card').forEach((el) => el.classList.add('visible'));
+        return;
+      }
+      if (!attractionsData.length) return;
+      
+      // Fisher-Yates shuffle
+      function shuffle(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      // Get preferences
+      let prefs = null;
+      try {
+        const raw = localStorage.getItem('ytp_prefs');
+        if (raw) prefs = JSON.parse(raw);
+      } catch (e) { /* ignore */ }
+      
+      const interests = prefs?.interests || [];
+      const districts = prefs?.districts || [];
+      const hasPrefs = interests.length > 0 || districts.length > 0;
+
+      // Shuffle attractions for random order on default
+      let shuffled = shuffle(attractionsData);
+
+      const districtCanon = {
+        '大安區': '大安區', 'Da\'an District': '大安區', 'Daan District': '大安區',
+        '信義區': '信義區', 'Xinyi District': '信義區',
+        '中山區': '中山區', 'Zhongshan District': '中山區',
+        '中正區': '中正區', 'Zhongzheng District': '中正區',
+        '松山區': '松山區', 'Songshan District': '松山區',
+        '士林區': '士林區', 'Shilin District': '士林區',
+        '大同區': '大同區', 'Datong District': '大同區',
+        '萬華區': '萬華區', 'Wanhua District': '萬華區',
+        '內湖區': '內湖區', 'Neihu District': '內湖區',
+        '北投區': '北投區', 'Beitou District': '北投區',
+        '文山區': '文山區', 'Wenshan District': '文山區',
+        '南港區': '南港區', 'Nangang District': '南港區',
+      };
+      const canonDistrict = (d) => districtCanon[d] || d;
+      const selectedDistricts = new Set(districts.map(canonDistrict));
+      const selectedInterests = new Set(interests.map((i) => String(i || '').toLowerCase()));
+
+      function matchesInterest(category, interest) {
+        const c = String(category || '').toLowerCase();
+        const aliases = {
+          food: ['food', 'gourmet', '美食', 'グルメ', '맛있는 음식'],
+          culture: ['culture', '文化', 'カルチャー', '문화'],
+          nature: ['nature', '自然', '자연'],
+          shopping: ['shopping', '購物', '買い物', 'ショッピング', '쇼핑'],
+          relax: ['relax', 'leisure', '休閒', 'レジャー', '여가', '온천', '温泉'],
+          night: ['night', '夜晚', '夜', 'ナイト', '밤', '나이트'],
+        };
+        return (aliases[interest] || [interest]).some((alias) => c.includes(String(alias).toLowerCase()));
+      }
+
+      // Score function for preference matching
+      function scoreCard(card) {
+        const cardInts = card.category || [];
+        const cardDist = canonDistrict(card.district || '');
+        let s = 0;
+        for (const i of selectedInterests) {
+          if (cardInts.some((c) => matchesInterest(c, i))) s += 6;
+        }
+        if (selectedDistricts.size && selectedDistricts.has(cardDist)) s += 10;
+        s += Math.min(3, Number(card.suggestion_level || 1));
+        return s;
+      }
+
+      // If preferences exist, sort by score (highest first), otherwise keep shuffled
+      if (hasPrefs) {
+        // Hard filter by district first to avoid irrelevant district leakage.
+        if (selectedDistricts.size) {
+          const districtOnly = shuffled.filter((c) => selectedDistricts.has(canonDistrict(c.district || '')));
+          if (districtOnly.length) shuffled = districtOnly;
+        }
+        shuffled.sort((a, b) => scoreCard(b) - scoreCard(a));
+      }
+
+      // Take top 4 cards
+      const selectedCards = shuffled.slice(0, 4);
+
+      // Build card HTML based on index
+      const categoryLabels = {
+        food: 'Food & Drink', nature: 'Nature', culture: 'Culture',
+        shopping: 'Shopping', relax: 'Relaxation', night: 'Night Scene'
+      };
+
+      function getLabel(cats) {
+        return cats?.map(c => categoryLabels[String(c || '').toLowerCase()] || c).join(', ') || 'Attraction';
+      }
+
+      function truncate(text, len) {
+        return text?.length > len ? text.slice(0, len) + '...' : text;
+      }
+
+      selectedCards.forEach((card, index) => {
+        const sizeClass = index === 0 ? 'feature' : index === 1 ? 'medium' : 'small-card';
+        const delayClass = `reveal-delay-${index + 1}`;
+        const el = grid.children[index];
+        if (!el) return;
+        el.className = `bento-card ${sizeClass} reveal ${delayClass}`;
+        el.setAttribute('data-interests', (card.category || []).join(','));
+        el.setAttribute('data-district', card.district || '');
+        el.setAttribute('data-id', card.id);
+        
+        if (sizeClass === 'feature') {
+          el.innerHTML = `
+            <div class="card-img">
+              <span class="card-badge badge-history">${getLabel(card.category)}</span>
+              <img src="${card.image}" alt="${card.name}" />
+            </div>
+            <div class="card-body">
+              <h3>${card.name}</h3>
+              <p>${truncate(card.description, 150)}</p>
+              <a class="card-link" href="/place/a/${card.id}">
+                Explore
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+              </a>
+            </div>
+          `;
+        } else if (sizeClass === 'medium') {
+          el.innerHTML = `
+            <img class="bg-img" src="${card.image}" alt="${card.name}" />
+            <div class="card-content">
+              <div class="card-label">${getLabel(card.category)}</div>
+              <h3>${card.name}</h3>
+              <p>${truncate(card.description, 80)}</p>
+              <a class="card-link" style="margin-top:0.8rem;color:#fff" href="/place/a/${card.id}">
+                Explore
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+              </a>
+            </div>
+          `;
+        } else {
+          el.innerHTML = `
+            <div class="icon-wrap red">
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">place</span>
+            </div>
+            <h4>${card.name}</h4>
+            <p>${truncate(card.description, 80)}</p>
+            <a class="small-card-btn red" href="/place/a/${card.id}">Explore →</a>
+          `;
+        }
+      });
+
+      // Apply pref-match class if matched
+      if (hasPrefs) {
+        Array.from(grid.children).forEach((cardEl, i) => {
+          const card = selectedCards[i];
+          if (!card) return;
+          if (scoreCard(card) > 0) cardEl.classList.add('pref-match');
+        });
+      }
+
+      // Update UI text based on prefs
+      const label = document.getElementById('bento-label');
+      const title = document.getElementById('bento-title');
+      const sub = document.getElementById('bento-sub');
+      const banner = document.getElementById('pref-banner');
+      const bannerText = document.getElementById('pref-banner-text');
+
+      if (hasPrefs) {
+        if (label) label.textContent = 'Picked For You';
+        if (title) title.textContent = 'Your Taipei Shortlist';
+        if (sub) sub.textContent = 'Reordered to match your interests — edit your preferences anytime.';
+        if (banner && bannerText) {
+          const parts = [];
+          if (interests.length) parts.push(interests.join(' · '));
+          if (districts.length) parts.push(districts.join(' · '));
+          bannerText.textContent = 'Based on your picks: ' + parts.join(' • ');
+          banner.removeAttribute('hidden');
+        }
+      }
+      } catch (err) {
+        // Never leave bento cards hidden if personalization script fails.
+        document.querySelectorAll('#bento-grid .bento-card').forEach((el) => el.classList.add('visible'));
+        console.error('initBentoCards failed:', err);
+      }
+    })();
+
+    // ── SCROLL REVEAL ──
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => revealObserver.observe(el));
+
+    // ── PARALLAX ──
+    const heroImg = document.querySelector('.hero-image-frame img');
+    if (heroImg) {
+      window.addEventListener('scroll', () => {
+        const s = window.scrollY;
+        if (s < window.innerHeight) heroImg.style.transform = `scale(1.05) translateY(${s * 0.06}px)`;
+      }, { passive: true });
+    }
+
+    // ── COUNTER ANIMATION ──
+    function animateCounter(el, target, suffix = '') {
+      const duration = 1200, start = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    
+    const statsCard = document.querySelector('.stats-card');
+    if (statsCard) {
+      const so = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+          const nums = statsCard.querySelectorAll('.stat-num');
+          animateCounter(nums[0], 12);
+          animateCounter(nums[1], 700, '+');
+          so.disconnect();
+        }
+      }, { threshold: 0.5 });
+      so.observe(statsCard);
+    }
+
+    // ── TRIP WIDGET ──
+    (function() {
+      try {
+        const raw = localStorage.getItem('taipei-trip');
+        if (!raw) return;
+        const places = JSON.parse(raw);
+        if (!Array.isArray(places) || places.length === 0) return;
+        const section = document.getElementById('tripWidgetSection');
+        const sub = document.getElementById('tripWidgetSub');
+        const thumbs = document.getElementById('tripWidgetThumbs');
+        if (!section) return;
+        section.style.display = '';
+        if (sub) sub.textContent = `${places.length} place${places.length !== 1 ? 's' : ''} saved`;
+        if (thumbs) {
+          places.slice(0, 4).forEach(p => {
+            const el = document.createElement('a');
+            el.href = '/trip';
+            el.className = 'trip-thumb';
+            el.title = p.name || '';
+            if (p.image) {
+              el.style.backgroundImage = `url('${p.image}')`;
+            } else {
+              el.innerHTML = `<span class="material-symbols-outlined">location_on</span>`;
+            }
+            thumbs.appendChild(el);
+          });
+          if (places.length > 4) {
+            const more = document.createElement('a');
+            more.href = '/trip';
+            more.className = 'trip-thumb trip-thumb-more';
+            more.textContent = `+${places.length - 4}`;
+            thumbs.appendChild(more);
+          }
+        }
+      } catch(e) {}
+    })();
+
+    // ── SCHEDULE WIDGET ──
+    (function() {
+      try {
+        const schedRaw = localStorage.getItem('ytp_schedule');
+        const tripRaw = localStorage.getItem('ytp_trip');
+        if (!schedRaw || !tripRaw) return;
+        const sched = JSON.parse(schedRaw);
+        const trip = JSON.parse(tripRaw);
+        if (!Array.isArray(trip) || !trip.length) return;
+        const hasSchedule = Object.values(sched.slots || {}).some(arr => arr && arr.length > 0);
+        if (!hasSchedule) return;
+
+        const section = document.getElementById('scheduleWidgetSection');
+        const sub = document.getElementById('scheduleWidgetSub');
+        const daysEl = document.getElementById('scheduleWidgetDays');
+        if (!section || !daysEl) return;
+
+        const tripMap = Object.fromEntries(trip.map(p => [p.type + ':' + p.id, p]));
+        const startDate = sched.startDate ? new Date(sched.startDate + 'T00:00:00') : null;
+        const totalDays = Math.min(Math.max(1, sched.days || 3), 5);
+        let totalStops = 0;
+
+        for (let d = 0; d < totalDays; d++) {
+          const places = [];
+          ['morning', 'afternoon', 'evening'].forEach(t => {
+            ((sched.slots || {})[`${d}-${t}`] || []).forEach(k => {
+              const p = tripMap[k]; if (p) places.push(p);
+            });
+          });
+          if (!places.length) continue;
+          totalStops += places.length;
+
+          let dateLabel = '';
+          if (startDate) {
+            const dd = new Date(startDate);
+            dd.setDate(dd.getDate() + d);
+            dateLabel = dd.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          }
+
+          const card = document.createElement('a');
+          card.href = '/trip';
+          card.className = 'sched-day-card';
+          card.innerHTML = `
+            <div class="sched-day-label">Day ${d + 1}</div>
+            ${dateLabel ? `<div class="sched-day-date">${dateLabel}</div>` : ''}
+            ${places.slice(0, 3).map(p => `<div class="sched-place">${p.name}</div>`).join('')}
+            ${places.length > 3 ? `<div class="sched-more">+${places.length - 3} more</div>` : ''}
+          `;
+          daysEl.appendChild(card);
+        }
+
+        if (!totalStops) return;
+        section.style.display = '';
+        if (sub) sub.textContent = `${totalStops} stop${totalStops !== 1 ? 's' : ''} planned`;
+      } catch(e) {}
+    })();
+
+    // ── CARD TILT ──
+    document.querySelectorAll('.bento-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+        const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+        card.style.transform = `translateY(-4px) rotateY(${dx * 4}deg) rotateX(${-dy * 4}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+        card.style.transition = 'transform 0.5s ease';
+        setTimeout(() => card.style.transition = '', 500);
+      });
+    });
+
+    </script>

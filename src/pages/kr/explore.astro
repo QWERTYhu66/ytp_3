@@ -1,0 +1,590 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import attractionsRaw from '../../../scripts/pages/attractions_kr.json';
+import festivalsRaw from '../../data/festivals.json';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const attractionsData = attractionsRaw.filter((attraction: any) => Number(attraction.suggestion_level) === 3);
+const districts = [...new Set(attractionsData.map((a: any) => a.district))].sort();
+const categories = [...new Set(attractionsData.flatMap((a: any) => a.category))].sort();
+
+type Festival = { slug: string; months: number[]; date: { en: string; zh: string; jp: string; kr: string }; emoji: string; color: string; title: { en: string; zh: string; jp: string; kr: string }; description: { en: string; zh: string; jp: string; kr: string }; destinations: string[]; };
+const festivals = festivalsRaw as Festival[];
+const MONTH_NAMES_KR = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const colorHex: Record<string,string> = { vermillion:'#c0392b', jade:'#1e6b52', gold:'#d4a017', amber:'#b87822', coral:'#e26a6a', pink:'#c5337a', ink:'#1a1a2e' };
+
+const _restRaw = JSON.parse(fs.readFileSync(path.resolve('./public/data/restaurants.json'), 'utf8')) as any[];
+const topFoods = _restRaw
+  .map((r: any, i: number) => ({ ...r, _idx: i }))
+  .filter((r: any) => { const l = Number(r.suggestion_level); return l === 2 || l === 3; })
+  .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
+  .slice(0, 300);
+
+const FOOD_CAT_KR: Record<string,string> = {
+  '義式料理':'이탈리안','午餐':'점심','晚餐':'저녁','約會餐廳':'데이트 식당','早餐':'아침식사',
+  '早午餐':'브런치','下午茶':'애프터눈티','甜點':'디저트','咖啡':'카페','精品咖啡':'스페셜티 커피',
+  '居酒屋':'이자카야','日本料理':'일본 요리','拉麵':'라멘','壽司':'초밥','燒肉':'야키니쿠',
+  '火鍋':'훠궈','涮涮鍋':'샤부샤부','韓式料理':'한식','泰式料理':'태국 요리','越式料理':'베트남 요리',
+  '印度料理':'인도 요리','法式料理':'프랑스 요리','美式料理':'미국 요리','中式料理':'중국 요리',
+  '海鮮':'해산물','牛排':'스테이크','牛肉麵':'쇠고기 면','小吃':'길거리 음식',
+  '烘焙坊':'베이커리','冰淇淋':'아이스크림','刨冰':'빙수','咖哩':'카레','披薩':'피자','漢堡':'버거',
+  '素食':'채식','吃到飽':'무한리필','精緻高級':'파인다이닝','Buffet':'뷔페','Fine Dining':'파인다이닝',
+  'POKE':'포케','TAPAS':'타파스',
+};
+const foodCat = (c: string) => FOOD_CAT_KR[c] ?? c;
+
+const DISTRICT_KR: Record<string,string> = {
+  '三重區':'삼중구','中壢區':'중리구','中山區':'중산구',
+  '中正區':'중정구','信义区':'신이구','信義區':'신이구',
+  '內湖區':'네이후구','内湖区':'네이후구','北投區':'베이터우구',
+  '南港區':'난강구','台北市':'타이베이 시','士林區':'스린구',
+  '大同區':'다퉁구','大安区':'다안구','大安區':'다안구',
+  '文山區':'원산구','新店區':'신뎬구','松山區':'송산구',
+  '松山鎮':'송산','永和區':'융허구','萬華區':'완화구',
+};
+const districtLabel = (d: string) => DISTRICT_KR[d] ?? d;
+
+const copy = {
+  pageLabel: '모든 명소',
+  title: '타이베이 탐색',
+  subtitle: '타이베이의 800개 이상 명소, 8000개 이상 음식점, 수많은 축제를 탐색하세요. 지역·카테고리로 필터하거나 이름으로 검색하세요.',
+  searchPlaceholder: '명소 검색…',
+  districtPlaceholder: '지역 선택',
+  categoryPlaceholder: '카테고리 선택',
+  noResults: '필터 조건에 맞는 명소가 없습니다.',
+  clearFilters: '필터 초기화',
+  showMore: '더 보기',
+  showLess: '접기',
+  tabAttractions: '명소',
+  tabFood: '음식',
+  tabFestivals: '축제',
+  foodSearchPlaceholder: '음식점 검색…',
+  foodDistrictPlaceholder: '지역 선택',
+  foodCategoryPlaceholder: '카테고리 선택',
+  foodClearFilters: '필터 초기화',
+  foodNoResults: '조건에 맞는 음식점이 없습니다.',
+};
+
+const foodDistricts = [...new Set(topFoods.map((r: any) => r.district).filter(Boolean))].sort();
+const foodCategories = [...new Set(topFoods.flatMap((r: any) => (r.categories || []).map((c: string) => foodCat(c))))].sort();
+---
+
+<Layout title="타이베이 탐색 | 타이베이 나침반">
+  <main class="explore-page">
+    <div class="explore-head">
+      <span class="section-label">{copy.pageLabel}</span>
+      <h1>{copy.title}</h1>
+      <p class="explore-sub">{copy.subtitle}</p>
+    </div>
+
+    <div class="explore-tabs">
+      <button class="explore-tab active" id="tabAttractions" data-tab="attractions">
+        <span class="material-symbols-outlined">location_on</span>
+        {copy.tabAttractions}
+      </button>
+      <button class="explore-tab" id="tabFood" data-tab="food">
+        <span class="material-symbols-outlined">restaurant</span>
+        {copy.tabFood}
+      </button>
+      <button class="explore-tab" id="tabFestivals" data-tab="festivals">
+        <span class="material-symbols-outlined">celebration</span>
+        {copy.tabFestivals}
+      </button>
+    </div>
+    <div id="panelAttractions">
+    <div class="filter-bar" id="filterBar">
+      <input type="search" id="searchInput" class="search-input" placeholder={copy.searchPlaceholder} autocomplete="off" spellcheck="false" />
+      <select id="districtFilter" class="filter-select">
+        <option value="" disabled selected>{copy.districtPlaceholder}</option>
+        {districts.map((d: string) => <option value={d}>{d}</option>)}
+      </select>
+      <select id="categoryFilter" class="filter-select">
+        <option value="" disabled selected>{copy.categoryPlaceholder}</option>
+        {categories.map((c: string) => <option value={c}>{c}</option>)}
+      </select>
+      <button id="clearBtn" class="clear-btn" style="display:none">{copy.clearFilters}</button>
+    </div>
+    <div class="selected-filters" id="districtSelections" style="display:none"></div>
+    <div class="selected-filters" id="categorySelections" style="display:none"></div>
+
+    <div class="results-bar">
+      <span id="resultsCount" class="results-count"></span>
+    </div>
+
+    <div class="attractions-grid" id="attractionsGrid">
+      {attractionsData.map((a: any) => (
+        <a
+          href={`/kr/place/a/${a.id}`}
+          class="attraction-card"
+          data-district={a.district}
+          data-categories={a.category.join('|')}
+          data-name={a.name.toLowerCase()}
+        >
+          <div class="card-img-wrap">
+            {a.image
+              ? <img src={a.image} alt={a.name} loading="lazy" decoding="async" />
+              : <div class="card-img-placeholder"><span class="material-symbols-outlined">landscape</span></div>
+            }
+            <div class="card-cats">
+              {a.category.map((c: string) => <span class="cat-pill">{c}</span>)}
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-name">{a.name}</h3>
+            <div class="card-meta">
+              <span class="card-district">
+                <span class="material-symbols-outlined">location_on</span>
+                {a.district}
+              </span>
+              {a.nearby_mrt && (
+                <span class="card-mrt">
+                  <span class="material-symbols-outlined">train</span>
+                  {a.nearby_mrt}
+                </span>
+              )}
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <div class="expand-row" id="expandRow">
+      <button class="expand-btn" id="expandBtn">
+        <span id="expandLabel">{copy.showMore}</span>
+        <span class="material-symbols-outlined" id="expandIcon">expand_more</span>
+      </button>
+    </div>
+
+    <div id="noResults" class="no-results" style="display:none">
+      <span class="material-symbols-outlined">search_off</span>
+      <p>{copy.noResults}</p>
+      <button id="noResultsClear" class="clear-btn">{copy.clearFilters}</button>
+    </div>
+    </div><!-- /panelAttractions -->
+    <div id="panelFood" style="display:none">
+      <div class="filter-bar">
+        <input type="search" id="foodSearch" class="search-input" placeholder={copy.foodSearchPlaceholder} autocomplete="off" spellcheck="false" />
+        <select id="foodDistrict" class="filter-select">
+          <option value="" disabled selected>{copy.foodDistrictPlaceholder}</option>
+          {foodDistricts.map((d: string) => <option value={d}>{districtLabel(d)}</option>)}
+        </select>
+        <select id="foodCategory" class="filter-select">
+          <option value="" disabled selected>{copy.foodCategoryPlaceholder}</option>
+          {foodCategories.map((c: string) => <option value={c}>{c}</option>)}
+        </select>
+      </div>
+      <div class="selected-row">
+        <div class="selected-filters" id="foodDistrictSelections" style="display:none"></div>
+        <button id="foodClearBtn" class="clear-btn" style="display:none">{copy.foodClearFilters}</button>
+      </div>
+      <div class="selected-filters" id="foodCategorySelections" style="display:none"></div>
+      <div class="results-bar"><span id="foodResultsCount" class="results-count"></span></div>
+      <div class="attractions-grid" id="foodGrid">
+        {topFoods.map((r: any) => (
+          <a href={`/kr/place/r/${r._idx}`} class="attraction-card food-card"
+            data-district={r.district}
+            data-categories={(r.categories || []).map((c: string) => foodCat(c)).join('|')}
+            data-name={r.name.toLowerCase()}>
+            <div class="card-img-wrap">
+              {r.photo ? <img src={r.photo} alt={r.name} loading="lazy" decoding="async" /> : <div class="card-img-placeholder"><span class="material-symbols-outlined">restaurant</span></div>}
+              <div class="card-cats">{(r.categories || []).slice(0, 3).map((c: string) => <span class="cat-pill">{foodCat(c)}</span>)}</div>
+              {r.rating > 0 && <div class="food-rating"><span class="material-symbols-outlined" style="font-size:12px">star</span>{r.rating.toFixed(1)}</div>}
+            </div>
+            <div class="card-body">
+              <h3 class="card-name">{r.name}</h3>
+              <div class="card-meta">
+                <span class="card-district"><span class="material-symbols-outlined">location_on</span>{districtLabel(r.district)}</span>
+                {r.avg_price > 0 && <span class="card-mrt"><span class="material-symbols-outlined">payments</span>NT${r.avg_price}</span>}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+      <div class="expand-row" id="foodExpandRow">
+        <button class="expand-btn" id="foodExpandBtn">
+          <span id="foodExpandLabel">{copy.showMore}</span>
+          <span class="material-symbols-outlined" id="foodExpandIcon">expand_more</span>
+        </button>
+      </div>
+      <div id="foodNoResults" class="no-results" style="display:none">
+        <span class="material-symbols-outlined">search_off</span>
+        <p>{copy.foodNoResults}</p>
+        <button id="foodNoClear" class="clear-btn">{copy.foodClearFilters}</button>
+      </div>
+    </div><!-- /panelFood -->
+    <div id="panelFestivals" style="display:none">
+      <div class="fest-grid">
+        {festivals.map((f) => (
+          <a href={`/kr/festivals/${f.slug}`} class="fest-card" style={`--fest-color:${colorHex[f.color] ?? '#c0392b'}`}>
+            <div class="fest-emoji">{f.emoji}</div>
+            <div class="fest-body">
+              <div class="fest-months">{f.months.map((m) => MONTH_NAMES_KR[m - 1]).join(' · ')}</div>
+              <h3 class="fest-title">{f.title.kr}</h3>
+              <p class="fest-desc">{f.description.kr}</p>
+            </div>
+            <span class="material-symbols-outlined fest-arrow">chevron_right</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<style is:global>
+    .explore-tabs { display: flex; gap: 0.5rem; justify-content: center; padding: 0 1.5rem 1rem; max-width: 1100px; margin: 0 auto; }
+    .explore-tab { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.3rem; border: 1.5px solid rgba(192,57,43,0.2); border-radius: 999px; background: transparent; color: rgba(26,26,46,0.5); font: 600 0.88rem 'Noto Sans TC', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .explore-tab .material-symbols-outlined { font-size: 17px; }
+    .explore-tab.active { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+    .explore-tab:not(.active):hover { border-color: var(--vermillion); color: var(--vermillion); }
+    .fest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; max-width: 1100px; margin: 0.5rem auto 0; padding: 0  1.5rem; }
+    .fest-card { display: flex; align-items: flex-start; gap: 1rem; background: #fff; border: 1.5px solid rgba(192,57,43,0.1); border-left: 4px solid var(--fest-color, #c0392b); border-radius: 14px; padding: 1.2rem; text-decoration: none; color: var(--ink); transition: transform 0.18s, box-shadow 0.18s; }
+    .fest-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(26,26,46,0.08); }
+    .fest-emoji { font-size: 2rem; flex-shrink: 0; line-height: 1; }
+    .fest-body { flex: 1; }
+    .fest-months { font-size: 0.7rem; font-weight: 700; color: var(--fest-color, #c0392b); margin-bottom: 0.25rem; }
+    .fest-title { font-size: 1rem; font-weight: 700; margin: 0 0 0.35rem; line-height: 1.3; }
+    .fest-desc { font-size: 0.8rem; color: rgba(26,26,46,0.55); line-height: 1.5; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .fest-arrow { color: rgba(26,26,46,0.25); font-size: 20px; align-self: center; flex-shrink: 0; transition: transform 0.18s; }
+    .fest-card:hover .fest-arrow { transform: translateX(3px); color: var(--fest-color, #c0392b); }
+    .food-rating { position: absolute; top: 0.5rem; right: 0.5rem; display: inline-flex; align-items: center; gap: 0.2rem; background: rgba(26,26,46,0.7); color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.18rem 0.5rem; border-radius: 999px; backdrop-filter: blur(4px); }
+    .food-rating .material-symbols-outlined { color: #f7c948; }
+    .explore-page { min-height: 100vh; background: linear-gradient(180deg, #FEFAF4 0%, #F5ECD7 25%, #FDF6E3 100%); padding-top: 80px; padding-bottom: 4rem; }
+    .explore-head { text-align: center; padding: 2rem 1.5rem 1.5rem; }
+    .section-label { display: inline-flex; align-items: center; gap: 0.5rem; text-transform: uppercase; letter-spacing: 0.15em; font-size: 0.6rem; font-weight: 700; color: var(--vermillion); }
+    .section-label::before, .section-label::after { content: ''; width: 18px; height: 1px; background: var(--vermillion); opacity: 0.7; }
+    .explore-head h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(1.8rem, 4vw, 2.6rem); color: var(--ink); margin: 0.35rem 0 0.5rem; }
+    .explore-sub { color: rgba(26,26,46,0.6); font-size: 0.95rem; max-width: 520px; margin: 0 auto; }
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; max-width: 1100px; margin: 0 auto 1rem; padding: 0 1.5rem; }
+  .filter-bar .filter-select { display: none; }
+    .search-input { flex: 1 1 100%; min-width: 180px; padding: 0.6rem 1rem; border: 1.5px solid rgba(192,57,43,0.18); border-radius: 999px; font: 0.9rem 'Noto Sans TC', sans-serif; background: #fff; color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .search-input:focus { border-color: rgba(192,57,43,0.45); box-shadow: 0 0 0 3px rgba(192,57,43,0.08); }
+    .search-input::placeholder { color: rgba(26,26,46,0.35); }
+    .filter-select {
+      padding: 0.6rem 2.2rem 0.6rem 1rem;
+      border: 1.5px solid rgba(192,57,43,0.18);
+      border-radius: 999px;
+      font: 0.9rem 'Noto Sans TC', sans-serif;
+      background-color: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, rgba(26,26,46,0.6) 50%), linear-gradient(135deg, rgba(26,26,46,0.6) 50%, transparent 50%);
+      background-position: calc(100% - 16px) calc(50% - 3px), calc(100% - 11px) calc(50% - 3px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+    }
+    .selected-filters { max-width: 1100px; margin: -0.25rem auto 0.65rem; padding: 0 1.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .selected-row { max-width: 1100px; margin: -0.25rem auto 0.65rem; padding: 0 1.5rem; display: flex; align-items: center; gap: 0.6rem; }
+  .selected-row .selected-filters { margin: 0; padding: 0; flex: 1; }
+  .selected-row .clear-btn { margin-left: auto; white-space: nowrap; }
+    .selected-filter-chip { display: inline-flex; align-items: center; gap: 0.3rem; border: 1px solid rgba(192,57,43,0.25); border-radius: 999px; background: rgba(192,57,43,0.06); color: var(--vermillion); font: 600 0.78rem 'Noto Sans TC', sans-serif; padding: 0.22rem 0.6rem; }
+    .selected-filter-chip button { border: none; background: transparent; color: inherit; cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 0; }
+    .clear-btn { padding: 0.55rem 1.1rem; background: transparent; border: 1.5px solid rgba(192,57,43,0.3); border-radius: 999px; color: var(--vermillion); font: 0.85rem 'Noto Sans TC', sans-serif; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+    .clear-btn:hover { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+    .results-bar { max-width: 1100px; margin: 0 auto 0.75rem; padding: 0 1.5rem; }
+    .results-count { font-size: 0.82rem; color: rgba(26,26,46,0.5); font-weight: 600; }
+    .attractions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+    .attraction-card { background: #fff; border: 1px solid rgba(192,57,43,0.1); border-radius: 16px; overflow: hidden; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(26,26,46,0.05); transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+    .attraction-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(192,57,43,0.13); border-color: rgba(192,57,43,0.28); }
+    .attraction-card[data-hidden] { display: none; }
+    .card-img-wrap { position: relative; aspect-ratio: 16/9; overflow: hidden; background: #f0ebe0; }
+    .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.35s ease; }
+    .attraction-card:hover .card-img-wrap img { transform: scale(1.04); }
+    .card-img-placeholder { width: 100%; height: 100%; display: grid; place-items: center; color: rgba(192,57,43,0.25); }
+    .card-img-placeholder .material-symbols-outlined { font-size: 2.5rem; }
+    .card-cats { position: absolute; bottom: 0.5rem; left: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+    .cat-pill { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.18rem 0.55rem; background: rgba(26,26,46,0.62); color: #fff; border-radius: 999px; backdrop-filter: blur(4px); }
+    .card-body { padding: 0.9rem 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+    .card-name { font-size: 1rem; font-weight: 700; color: var(--ink); line-height: 1.3; margin: 0; }
+    .card-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .card-district, .card-mrt { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.77rem; color: rgba(26,26,46,0.55); }
+    .card-district .material-symbols-outlined, .card-mrt .material-symbols-outlined { font-size: 13px; color: var(--vermillion); opacity: 0.7; }
+    .no-results { text-align: center; padding: 4rem 1rem; color: rgba(26,26,46,0.45); }
+    .no-results .material-symbols-outlined { font-size: 3rem; display: block; margin-bottom: 0.75rem; }
+    .no-results p { margin-bottom: 1.25rem; font-size: 1rem; }
+    .expand-row { display: flex; justify-content: center; padding: 1.5rem 0 0.5rem; max-width: 1100px; margin: 0 auto; }
+    .expand-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.6rem; background: #fff; border: 1.5px solid rgba(192,57,43,0.25); border-radius: 999px; color: var(--vermillion); font: 600 0.9rem 'Noto Sans TC', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .expand-btn:hover { background: var(--vermillion); color: #fff; border-color: var(--vermillion); }
+    .expand-btn .material-symbols-outlined { font-size: 18px; transition: transform 0.2s; }
+    .expand-btn.expanded .material-symbols-outlined { transform: rotate(180deg); }
+    @media (max-width: 600px) { .filter-bar { gap: 0.45rem; } .search-input { min-width: 100%; } .filter-select { flex: 1; } .attractions-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.85rem; } .card-name { font-size: 0.88rem; } }
+  </style>
+
+<script is:inline define:vars={{ showMoreLabel: copy.showMore, showLessLabel: copy.showLess }}>
+    const LIMIT = 9;
+    const STEP = 9;
+    const grid = document.getElementById('attractionsGrid');
+    const noResults = document.getElementById('noResults');
+    const noResultsClear = document.getElementById('noResultsClear');
+    const searchInput = document.getElementById('searchInput');
+    const districtFilter = document.getElementById('districtFilter');
+    const districtSelections = document.getElementById('districtSelections');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const clearBtn = document.getElementById('clearBtn');
+    const resultsCount = document.getElementById('resultsCount');
+    const expandRow = document.getElementById('expandRow');
+    const expandBtn = document.getElementById('expandBtn');
+    const expandLabel = document.getElementById('expandLabel');
+    const expandIcon = document.getElementById('expandIcon');
+    const categorySelections = document.getElementById('categorySelections');
+    const foodCategorySelections = document.getElementById('foodCategorySelections');
+    const foodDistrictSelections = document.getElementById('foodDistrictSelections');
+    const cards = Array.from(grid.querySelectorAll('.attraction-card'));
+    const total = cards.length;
+    let visibleCount = LIMIT;
+    const selectedDistricts = new Set();
+    const selectedFoodDistricts = new Set();
+    const selectedCategories = new Set();
+    const selectedFoodCategories = new Set();
+
+    function renderSelectedChips(container, selectedSet, onRemove) {
+      if (!container) return;
+      const values = Array.from(selectedSet);
+      if (!values.length) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+        return;
+      }
+      container.innerHTML = values.map((value) => (
+        `<span class="selected-filter-chip">${value}<button type="button" data-remove="${value}" aria-label="Remove ${value}">×</button></span>`
+      )).join('');
+      container.style.display = '';
+      container.querySelectorAll('button[data-remove]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+        const v = btn.getAttribute('data-remove');
+        onRemove(v);
+        renderSelectedChips(container, selectedSet, onRemove);
+      });
+      });
+    }
+
+    function applyFilters() {
+      const query = searchInput.value.trim().toLowerCase();
+      const hasFilter = query || selectedDistricts.size || selectedCategories.size;
+      clearBtn.style.display = hasFilter ? '' : 'none';
+      const limit = hasFilter ? Infinity : visibleCount;
+      let visible = 0;
+      for (const card of cards) {
+        const passes = (!query || card.dataset.name.includes(query)) &&
+          (!selectedDistricts.size || selectedDistricts.has(card.dataset.district)) &&
+          (!selectedCategories.size || card.dataset.categories.split('|').some((c) => selectedCategories.has(c)));
+        const show = passes && visible < limit;
+        card.toggleAttribute('data-hidden', !show);
+        if (passes) visible++;
+      }
+      resultsCount.textContent = hasFilter ? `${total}개 중 ${visible}개 결과` : `전체 ${total}개 명소`;
+      noResults.style.display = visible === 0 ? '' : 'none';
+      grid.style.display = visible === 0 ? 'none' : '';
+      expandRow.style.display = (!hasFilter && total > LIMIT) ? '' : 'none';
+    }
+    function clearAll() {
+      searchInput.value = '';
+      districtFilter.value = '';
+      categoryFilter.value = '';
+      selectedDistricts.clear();
+      selectedCategories.clear();
+      renderSelectedChips(districtSelections, selectedDistricts, (v) => { selectedDistricts.delete(v); applyFilters(); });
+      renderSelectedChips(categorySelections, selectedCategories, (v) => { selectedCategories.delete(v); applyFilters(); });
+      applyFilters();
+    }
+    expandBtn.addEventListener('click', () => {
+      if (visibleCount < total) {
+        visibleCount = Math.min(visibleCount + STEP, total);
+      } else {
+        visibleCount = LIMIT;
+      }
+      const fullyShown = visibleCount >= total;
+      expandLabel.textContent = fullyShown ? showLessLabel : showMoreLabel;
+      expandIcon.textContent = fullyShown ? 'expand_less' : 'expand_more';
+      expandBtn.classList.toggle('expanded', fullyShown);
+      applyFilters();
+    });
+    searchInput.addEventListener('input', applyFilters);
+    districtFilter.addEventListener('change', () => {
+      const value = districtFilter.value;
+      if (value) {
+        selectedDistricts.add(value);
+        districtFilter.value = '';
+        renderSelectedChips(districtSelections, selectedDistricts, (v) => { selectedDistricts.delete(v); applyFilters(); });
+      }
+      applyFilters();
+    });
+    categoryFilter.addEventListener('change', () => {
+      const value = categoryFilter.value;
+      if (value) {
+        selectedCategories.add(value);
+        categoryFilter.value = '';
+        renderSelectedChips(categorySelections, selectedCategories, (v) => { selectedCategories.delete(v); applyFilters(); });
+      }
+      applyFilters();
+    });
+    clearBtn.addEventListener('click', clearAll);
+    noResultsClear.addEventListener('click', clearAll);
+    applyFilters();
+
+    // Food filters + expand
+    (function() {
+      const fg = document.getElementById('foodGrid');
+      const fs = document.getElementById('foodSearch');
+      const fd = document.getElementById('foodDistrict');
+      const fc = document.getElementById('foodCategory');
+      const fcb = document.getElementById('foodClearBtn');
+      const frc = document.getElementById('foodResultsCount');
+      const fnr = document.getElementById('foodNoResults');
+      const fer = document.getElementById('foodExpandRow');
+      const feb = document.getElementById('foodExpandBtn');
+      const fel = document.getElementById('foodExpandLabel');
+      const fei = document.getElementById('foodExpandIcon');
+      const fcards = fg ? Array.from(fg.querySelectorAll('.food-card')) : [];
+      const ft = fcards.length;
+      const FL = 9;
+      const FS = 9;
+      let fvis = FL;
+      function applyFF() {
+        const q = fs.value.trim().toLowerCase();
+        const hasFilter = q || selectedFoodDistricts.size || selectedFoodCategories.size;
+        fcb.style.display = hasFilter ? '' : 'none';
+        const lim = hasFilter ? Infinity : fvis;
+        let v = 0;
+        for (const card of fcards) {
+          const p = (!q || card.dataset.name.includes(q)) && (!selectedFoodDistricts.size || selectedFoodDistricts.has(card.dataset.district)) && (!selectedFoodCategories.size || card.dataset.categories.split('|').some((cat) => selectedFoodCategories.has(cat)));
+          const show = p && v < lim;
+          card.toggleAttribute('data-hidden', !show); if (p) v++;
+        }
+        frc.textContent = hasFilter ? `${ft}개 중 ${v}개 결과` : `전체 ${ft}개 음식점`;
+        fnr.style.display = v === 0 ? '' : 'none'; fg.style.display = v === 0 ? 'none' : '';
+        if (fer) fer.style.display = (!hasFilter && ft > FL) ? '' : 'none';
+      }
+      function clrFF() {
+        fs.value = ''; fd.value = ''; fc.value = '';
+        selectedFoodDistricts.clear(); selectedFoodCategories.clear();
+        renderSelectedChips(foodDistrictSelections, selectedFoodDistricts, (v) => { selectedFoodDistricts.delete(v); applyFF(); });
+        renderSelectedChips(foodCategorySelections, selectedFoodCategories, (v) => { selectedFoodCategories.delete(v); applyFF(); });
+        applyFF();
+      }
+      if (fs) {
+        feb?.addEventListener('click', () => {
+          if (fvis < ft) {
+            fvis = Math.min(fvis + FS, ft);
+          } else {
+            fvis = FL;
+          }
+          const fullyShown = fvis >= ft;
+          fel.textContent = fullyShown ? showLessLabel : showMoreLabel;
+          fei.textContent = fullyShown ? 'expand_less' : 'expand_more';
+          feb.classList.toggle('expanded', fullyShown);
+          applyFF();
+        });
+        fs.addEventListener('input', applyFF);
+        fd.addEventListener('change', () => {
+          const value = fd.value;
+          if (value) {
+            selectedFoodDistricts.add(value);
+            fd.value = '';
+            renderSelectedChips(foodDistrictSelections, selectedFoodDistricts, (v) => { selectedFoodDistricts.delete(v); applyFF(); });
+          }
+          applyFF();
+        });
+        fc.addEventListener('change', () => {
+          const value = fc.value;
+          if (value) {
+            selectedFoodCategories.add(value);
+            fc.value = '';
+            renderSelectedChips(foodCategorySelections, selectedFoodCategories, (v) => { selectedFoodCategories.delete(v); applyFF(); });
+          }
+          applyFF();
+        });
+        fcb.addEventListener('click', clrFF);
+        document.getElementById('foodNoClear')?.addEventListener('click', clrFF);
+        applyFF();
+      }
+    })();
+
+    // Tab switching
+    const panelAttractions = document.getElementById('panelAttractions');
+    const panelFood = document.getElementById('panelFood');
+    const panelFestivals = document.getElementById('panelFestivals');
+    document.querySelectorAll('.explore-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.explore-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        panelAttractions.style.display = tab === 'attractions' ? '' : 'none';
+        panelFood.style.display = tab === 'food' ? '' : 'none';
+        panelFestivals.style.display = tab === 'festivals' ? '' : 'none';
+      });
+    });
+
+    (function syncFromPrefs() {
+      let prefs;
+      try {
+        const raw = localStorage.getItem('ytp_prefs');
+        if (!raw) return;
+        prefs = JSON.parse(raw);
+      } catch {
+        return;
+      }
+
+      const prefDistricts = Array.isArray(prefs?.districts) ? prefs.districts : [];
+      const prefInterests = Array.isArray(prefs?.interests) ? prefs.interests.map((v) => String(v).toLowerCase()) : [];
+      if (!prefDistricts.length && !prefInterests.length) return;
+
+      const districtAliases = {
+        '大安區': ['大安區', "Da'an District", 'Daan District', '大安区', '다안구'],
+        '信義區': ['信義區', 'Xinyi District', '信義区', '신이구'],
+        '中山區': ['中山區', 'Zhongshan District', '中山区', '중산구'],
+        '中正區': ['中正區', 'Zhongzheng District', '中正区', '중정구'],
+        '松山區': ['松山區', 'Songshan District', '松山区', '송산구'],
+        '士林區': ['士林區', 'Shilin District', '士林区', '스린구'],
+        '大同區': ['大同區', 'Datong District', '大同区', '다퉁구'],
+        '萬華區': ['萬華區', 'Wanhua District', '万華区', '완화구'],
+        '內湖區': ['內湖區', 'Neihu District', '内湖区', '네이후구'],
+        '北投區': ['北投區', 'Beitou District', '北投区', '베이터우구'],
+        '文山區': ['文山區', 'Wenshan District', '文山区', '원산구'],
+        '南港區': ['南港區', 'Nangang District', '南港区', '난강구'],
+      };
+      const canonDistrict = (d) => Object.keys(districtAliases).find((k) => districtAliases[k].includes(d)) || d;
+      const selectedCanon = prefDistricts.map(canonDistrict);
+
+      const addDistrictMatches = (selectEl, targetSet, targetContainer, applyFn) => {
+        if (!selectEl) return;
+        const values = Array.from(selectEl.options).map((o) => o.value).filter(Boolean);
+        values
+          .filter((v) => selectedCanon.includes(canonDistrict(v)))
+          .forEach((v) => targetSet.add(v));
+        renderSelectedChips(targetContainer, targetSet, (v) => { targetSet.delete(v); applyFn(); });
+      };
+
+      addDistrictMatches(districtFilter, selectedDistricts, districtSelections, applyFilters);
+      addDistrictMatches(document.getElementById('foodDistrict'), selectedFoodDistricts, foodDistrictSelections, () => {
+        document.getElementById('foodSearch')?.dispatchEvent(new Event('input'));
+      });
+
+      if (categoryFilter && prefInterests.length) {
+        const aliases = {
+          food: ['food', 'gourmet', '美食', 'グルメ', '맛있는 음식'],
+          culture: ['culture', '文化', 'カルチャー', '문화'],
+          nature: ['nature', '自然', '자연'],
+          shopping: ['shopping', '購物', '買い物', 'ショッピング', '쇼핑'],
+          relax: ['relax', 'leisure', '休閒', 'レジャー', '여가', '溫泉', '温泉', '온천'],
+          night: ['night', '夜晚', '夜', 'ナイト', '밤', '나이트'],
+        };
+        const optionValues = Array.from(categoryFilter.options).map((o) => o.value).filter(Boolean);
+        prefInterests
+          .flatMap((interest) => aliases[interest] || [interest])
+          .forEach((needle) => {
+            const selected = optionValues.find((v) => String(v).toLowerCase().includes(String(needle).toLowerCase()));
+            if (selected) selectedCategories.add(selected);
+          });
+        renderSelectedChips(categorySelections, selectedCategories, (v) => { selectedCategories.delete(v); applyFilters(); });
+      }
+
+      const shouldOpenFood = prefInterests.includes('food') && !prefInterests.some((v) => ['culture', 'nature', 'shopping', 'relax', 'night'].includes(v));
+      applyFilters();
+      document.getElementById('foodSearch')?.dispatchEvent(new Event('input'));
+      if (shouldOpenFood) document.getElementById('tabFood')?.click();
+    })();
+</script>

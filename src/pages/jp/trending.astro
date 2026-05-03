@@ -1,0 +1,11 @@
+---
+import TrendingPage from '../../components/trending.astro';
+import Layout from '../../layouts/Layout.astro';
+import { trendingPages } from '../../data/trending_i18n';
+
+const page = trendingPages.jp;
+---
+
+<Layout title={page.title}>
+  <TrendingPage {...page} />
+</Layout>

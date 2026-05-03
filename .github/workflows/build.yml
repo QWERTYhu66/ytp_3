@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static site (Astro type-checks templates while building)
+        run: npm run build
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
+          # Build-time placeholder; the AI page degrades gracefully without a real key.
+          PUBLIC_GEMINI_API_KEY: ci-placeholder-no-network-calls
+
+      - name: Upload dist artifact (preview)
+        uses: actions/upload-artifact@v4
+        with:
+          name: taipei-compass-dist
+          path: dist/
+          retention-days: 7

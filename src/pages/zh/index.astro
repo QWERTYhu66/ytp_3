@@ -1,0 +1,657 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import attractionsRaw from '../../../scripts/pages/attractions_zh.json';
+
+const attractions = attractionsRaw.filter((attraction) => Number(attraction.suggestion_level) === 3);
+const bentoCards = attractions.slice(0, 4).map((attraction, index) => {
+  const sizeClass = index === 0 ? 'feature' : index === 1 ? 'medium' : 'small-card';
+  return { ...attraction, sizeClass: `${sizeClass} reveal reveal-delay-${index + 1}` };
+});
+---
+
+<Layout title="台北指南針｜你的台北靈感旅伴">
+  <section class="hero">
+    <div class="hero-bg-circle c1"></div>
+    <div class="hero-bg-circle c2"></div>
+    <div class="hero-bg-circle c3"></div>
+    <span class="hero-vertical-text">台北 · TAIPEI · EXPLORE</span>
+
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-eyebrow">探索台灣之心</div>
+        <h1 class="hero-h1">
+          發現台北的<br />
+          <span class="accent">靈魂</span>
+          <span> 之旅</span>
+        </h1>
+        <p class="hero-desc">
+          感受古老文化與霓虹現代感交織的台北。從陽明山的霧氣茶館到大稻埕的熱鬧夜市，找到屬於你的城市節奏。
+        </p>
+        <div class="hero-tags">
+          <span class="tag tag-red">文化導覽</span>
+          <span class="tag tag-jade">自然探索</span>
+          <span class="tag tag-gold">美食路線</span>
+          <span class="tag tag-red">夜市文化</span>
+        </div>
+        <div class="hero-actions">
+          <a href="/zh/prelog" class="btn-primary" style="padding:0.75rem 1.8rem;font-size:0.95rem">
+            <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">map</span>
+            開始規劃行程
+          </a>
+          <button class="btn-ghost" onclick="document.getElementById('bento').scrollIntoView({behavior:'smooth'})">
+            探索景點
+          </button>
+          <button class="btn-near-me" id="near-me-btn" type="button">
+            <span class="material-symbols-outlined near-me-icon" style="font-size:17px">near_me</span>
+            <span id="near-me-label">附近景點</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-image-wrap">
+        <div class="hero-image-frame">
+          <div class="img-corner tl"></div>
+          <div class="img-corner br"></div>
+          <img src="https://cdn.pixabay.com/photo/2021/11/30/08/12/taiwan-6834738_1280.jpg" alt="Taipei 101" loading="eager" />
+        </div>
+        <div class="stats-card">
+          <div class="stat-item">
+            <span class="stat-num">12</span>
+            <span class="stat-label">行政區</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">800+</span>
+            <span class="stat-label">景點推薦</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">24hr</span>
+            <span class="stat-label">城市生活</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bento-section" id="bento">
+    <div class="section-inner">
+      <div class="bento-header reveal">
+        <div>
+          <div class="section-label" id="bento-label">熱門景點</div>
+          <h2 class="section-h2" id="bento-title">台北必訪體驗</h2>
+          <p class="section-sub" id="bento-sub">根據你的旅遊偏好，精心挑選最道地的台北體驗。</p>
+          <div class="pref-banner" id="pref-banner" hidden>
+            <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">auto_awesome</span>
+            <span id="pref-banner-text">為你個人化</span>
+            <a href="/zh/prelog" class="pref-edit">修改</a>
+          </div>
+        </div>
+        <a class="btn-ghost" href="/zh/explore">探索更多</a>
+      </div>
+      <div id="nearby-results" style="display:none;margin-bottom:2rem"></div>
+
+      <div class="bento-grid" id="bento-grid" data-attractions={JSON.stringify(attractions)}>
+        {bentoCards.map((card) => (
+          <div 
+            class={`bento-card ${card.sizeClass}`}
+            data-interests={card.category.join(',')}
+            data-district={card.district}
+            data-id={card.id}
+          >
+            {card.sizeClass.startsWith('feature') && (
+              <div class="card-img">
+                <span class="card-badge badge-history">{card.category[0]}</span>
+                <img src={card.image} alt={card.name} />
+              </div>
+            )}
+            {card.sizeClass.startsWith('feature') && (
+              <div class="card-body">
+                <h3>{card.name}</h3>
+                <p>{card.description?.slice(0, 150)}...</p>
+                <a class="card-link" href={'/zh/place/a/' + card.id}>
+                  探索
+                  <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+                </a>
+              </div>
+            )}
+            {card.sizeClass.startsWith('medium') && (
+              <>
+                <img class="bg-img" src={card.image} alt={card.name} />
+                <div class="card-content">
+                  <div class="card-label">{card.category[0]}</div>
+                  <h3>{card.name}</h3>
+                  <p>{card.description?.slice(0, 80)}...</p>
+                  <a class="card-link" style="margin-top:0.8rem;color:#fff" href={'/zh/place/a/' + card.id}>
+                    探索
+                    <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+                  </a>
+                </div>
+              </>
+            )}
+            {card.sizeClass.startsWith('small-card') && (
+              <>
+                <div class="icon-wrap red">
+                  <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">place</span>
+                </div>
+                <h4>{card.name}</h4>
+                <p>{card.description?.slice(0, 80)}...</p>
+                <a class="small-card-btn red" href={'/zh/place/a/' + card.id}>探索 →</a>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="festivals-section">
+    <div class="section-inner">
+      <div class="reveal" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:3rem">
+        <div>
+          <div class="section-label">節慶行事曆</div>
+          <h2 class="section-h2">
+            在對的時節<br />
+            感受台灣節慶
+          </h2>
+          <p class="section-sub">配合台灣最熱鬧的節日安排行程，讓旅途更加難忘。</p>
+        </div>
+        <a class="btn-ghost" href="/zh/festivals">查看全部節慶</a>
+      </div>
+
+      <div class="festival-grid">
+        <a href="/zh/festivals/lunar-new-year" class="festival-card reveal reveal-delay-1">
+          <img src="https://www.publicdomainpictures.net/pictures/490000/velka/image-1672084807biU.jpg" alt="Lunar New Year" />
+          <div class="overlay"></div>
+          <div class="festival-content">
+            <div class="festival-date date-red">1月 — 2月</div>
+            <h3>農曆新年</h3>
+            <p>紅燈籠高掛，爆竹聲聲迎新春。台北街頭化身喜慶的海洋，傳統與現代在此交融。</p>
+            <span class="festival-btn">
+              了解更多
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-size:14px!important">arrow_forward</span>
+            </span>
+          </div>
+        </a>
+
+        <a href="/zh/festivals/dragon-boat-festival" class="festival-card reveal reveal-delay-2">
+          <img src="https://static.vecteezy.com/system/resources/thumbnails/046/069/495/small_2x/a-colorful-dragon-boat-race-takes-place-on-a-river-with-teams-paddling-fiercely-to-usher-in-a-prosperous-new-year-photo.jpg" alt="Dragon Boat Festival" />
+          <div class="overlay"></div>
+          <div class="festival-content">
+            <div class="festival-date date-blue">6月</div>
+            <h3>端午節</h3>
+            <p>龍舟競渡鼓聲震天，粽香四溢的夏日傳統節慶，感受最在地的台灣文化活力。</p>
+            <span class="festival-btn">
+              了解更多
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-size:14px!important">arrow_forward</span>
+            </span>
+          </div>
+        </a>
+
+        <a href="/zh/festivals/mid-autumn-festival" class="festival-card reveal reveal-delay-3">
+          <img src="https://static.vecteezy.com/system/resources/previews/026/975/986/non_2x/chinese-traditional-mid-autumn-festival-moon-cake-in-wooden-plate-ai-generated-free-photo.jpg" alt="Mid-Autumn Festival" />
+          <div class="overlay"></div>
+          <div class="festival-content">
+            <div class="festival-date date-gold">9月</div>
+            <h3>中秋節</h3>
+            <p>皓月當空，月餅飄香。全家在公園烤肉賞月，是最台灣味的中秋記憶。</p>
+            <span class="festival-btn">
+              了解更多
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-size:14px!important">arrow_forward</span>
+            </span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <style is:global>
+    /* ── PAGE-SPECIFIC CSS ── */
+    /* HERO */
+    .hero { height: 100vh; display: flex; align-items: center; padding: 72px 2.5rem 0; position: relative; overflow: hidden; background: var(--parchment); }
+    .hero-bg-circle { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+    .hero-bg-circle.c1 { width: 600px; height: 600px; background: rgba(192,57,43,0.08); top: -100px; right: -100px; animation: float1 12s ease-in-out infinite; }
+    .hero-bg-circle.c2 { width: 400px; height: 400px; background: rgba(212,160,23,0.07); bottom: 0; left: 10%; animation: float2 15s ease-in-out infinite; }
+    .hero-bg-circle.c3 { width: 300px; height: 300px; background: rgba(30,107,82,0.06); top: 30%; left: 50%; animation: float1 18s ease-in-out infinite reverse; }
+    @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.05); } 66% { transform: translate(-20px,30px) scale(0.95); } }
+    @keyframes float2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-40px,-30px); } }
+
+    .hero-vertical-text { position: absolute; right: 3.5rem; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; font-family: 'Noto Serif TC', serif; font-size: 0.7rem; letter-spacing: 0.3em; color: var(--text-muted); opacity: 0.4; pointer-events: none; }
+    .hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; padding: 5.5rem 0 5.5rem; }
+    .hero-eyebrow { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--vermillion); margin-bottom: 1.2rem; animation: fadeInUp 0.8s ease both; }
+    .hero-eyebrow::before, .hero-eyebrow::after { content: ''; display: block; width: 24px; height: 1px; background: var(--vermillion); opacity: 0.6; }
+    .hero-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2.8rem, 6vw, 5rem); font-weight: 900; line-height: 1.1; color: var(--ink); margin-bottom: 1.5rem; animation: fadeInUp 0.8s ease 0.1s both; }
+    .hero-h1 .accent { color: var(--vermillion); position: relative; display: inline-block; }
+    .hero-h1 .accent::after { content: ''; position: absolute; bottom: 4px; left: 0; right: 0; height: 3px; background: var(--gold); transform: scaleX(0); transform-origin: left; animation: underlineReveal 0.8s cubic-bezier(0.25,0.46,0.45,0.94) 0.9s forwards; }
+    @keyframes underlineReveal { to { transform: scaleX(1); } }
+    .hero-desc { font-size: 1.05rem; line-height: 1.85; color: var(--text-secondary); margin-bottom: 2rem; max-width: 460px; animation: fadeInUp 0.8s ease 0.2s both; word-wrap: break-word; overflow-wrap: break-word; }
+
+    .hero-tags { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 2.5rem; animation: fadeInUp 0.8s ease 0.3s both; }
+    .tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.35rem 0.9rem; border-radius: 2px; border: 1px solid; cursor: default; transition: all 0.2s ease; }
+    .tag-red { background: rgba(192,57,43,0.08); color: var(--vermillion); border-color: rgba(192,57,43,0.25); }
+    .tag-red:hover { background: var(--vermillion); color: #fff; }
+    .tag-jade { background: rgba(30,107,82,0.08); color: var(--jade); border-color: rgba(30,107,82,0.25); }
+    .tag-jade:hover { background: var(--jade); color: #fff; }
+    .tag-gold { background: rgba(212,160,23,0.1); color: #8B6914; border-color: rgba(212,160,23,0.3); }
+    .tag-gold:hover { background: var(--gold); color: #fff; }
+    .hero-actions { display: flex; flex-wrap: nowrap; gap: 0.75rem; align-items: center; animation: fadeInUp 0.8s ease 0.4s both; }
+    .btn-near-me { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.65rem 1.2rem; border-radius: 999px; border: 1.5px solid rgba(192,57,43,0.35); background: rgba(192,57,43,0.06); color: var(--vermillion); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s; white-space: nowrap; }
+    .btn-near-me:hover { background: rgba(192,57,43,0.12); border-color: var(--vermillion); transform: translateY(-1px); }
+    .btn-near-me .near-me-icon { animation: none; }
+
+    .hero-image-wrap { position: relative; animation: fadeInRight 1s ease 0.3s both; }
+    @keyframes fadeInRight { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    .hero-image-frame { position: relative; border-radius: 4px; overflow: hidden; }
+    .hero-image-frame::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(160deg, transparent 60%, rgba(192,57,43,0.1) 100%); }
+    .hero-image-frame img { width: 100%; height: 520px; object-fit: cover; object-position: top; display: block; }
+    .img-corner { position: absolute; width: 40px; height: 40px; border-color: var(--gold); border-style: solid; z-index: 2; }
+    .img-corner.tl { top: -8px; left: -8px; border-width: 2px 0 0 2px; }
+    .img-corner.br { bottom: -8px; right: -8px; border-width: 0 2px 2px 0; }
+
+    .stats-card { position: absolute; bottom: calc(0.25rem - 2em); right: calc(0.25rem - 1.5em); background: var(--parchment); border: 1px solid rgba(192,57,43,0.15); border-radius: 4px; padding: 0.885rem 1.26rem; box-shadow: 0 20px 60px rgba(26,26,46,0.12); display: flex; gap: 1.78rem; z-index: 3; animation: float3 5s ease-in-out infinite; white-space: nowrap; }
+    @keyframes float3 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .stat-item { text-align: center; }
+    .stat-num { font-family: 'Noto Serif TC', serif; font-size: 1.32rem; font-weight: 900; color: var(--vermillion); display: block; line-height: 1; }
+    .stat-label { font-size: 0.575rem; font-weight: 500; letter-spacing: 0.08em; color: var(--text-muted); margin-top: 2px; }
+
+    /* SECTION COMMON */
+    section { padding: 6rem 2.5rem; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-label { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--vermillion); margin-bottom: 0.6rem; }
+    .section-label::before { content: ''; width: 20px; height: 1px; background: var(--vermillion); }
+    .section-h2 { font-family: 'Noto Serif TC', serif; font-size: clamp(1.8rem, 3.5vw, 2.8rem); font-weight: 900; color: var(--ink); line-height: 1.2; }
+    .section-sub { font-size: 0.95rem; color: var(--text-secondary); margin-top: 0.6rem; line-height: 1.7; }
+
+    /* BENTO */
+    .bento-section { background: var(--parchment-dark); position: relative; }
+    .bento-section::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(to right, transparent, var(--vermillion), transparent); opacity: 0.3; }
+    .bento-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; flex-wrap: wrap; gap: 1rem; }
+
+    .bento-grid { display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: auto auto; gap: 1.25rem; }
+    .bento-card { background: var(--warm-white); border: 1px solid rgba(192,57,43,0.08); border-radius: 4px; overflow: hidden; transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.35s ease, border-color 0.35s ease; word-wrap: break-word; overflow-wrap: break-word; }
+    .bento-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(192,57,43,0.1); border-color: rgba(192,57,43,0.2); }
+    .bento-card.feature { grid-column: span 2; grid-row: span 2; }
+    .bento-card.medium { grid-column: span 2; }
+    .bento-card .card-img { overflow: hidden; position: relative; }
+    .bento-card.feature .card-img { height: 340px; }
+    .bento-card.medium .card-img { height: 200px; }
+    .bento-card .card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .bento-card:hover .card-img img { transform: scale(1.07); }
+    .card-badge { position: absolute; top: 1rem; left: 1rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.7rem; border-radius: 2px; z-index: 2; }
+    .badge-history { background: var(--ink); color: var(--gold-light); }
+    .bento-card .card-body { padding: 1.4rem 1.6rem 1.6rem; position: relative; }
+    .bento-card.feature .card-body { padding: 1.6rem 2rem 2rem; }
+    .card-body h3 { font-family: 'Noto Serif TC', serif; font-size: 1.25rem; font-weight: 700; color: var(--ink); margin-bottom: 0.5rem; }
+    .bento-card.feature .card-body h3 { font-size: 1.5rem; }
+    .card-body p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.75; margin-bottom: 1.2rem; word-wrap: break-word; overflow-wrap: break-word; }
+    .card-link { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; color: var(--vermillion); background: none; border: none; cursor: pointer; padding: 0; transition: gap 0.2s ease; text-decoration: none; }
+    .card-link:hover { gap: 0.7rem; }
+
+    .bento-card.medium { position: relative; overflow: hidden; min-height: 260px; }
+    .bento-card.medium .bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .bento-card.medium:hover .bg-img { transform: scale(1.07); }
+    .bento-card.medium .card-content { position: absolute; bottom: 0; left: 0; right: 0; z-index: 1; padding: 1.4rem 1.6rem; background: linear-gradient(to top, rgba(26,26,46,0.92) 0%, rgba(26,26,46,0.45) 65%, transparent); }
+    .bento-card.medium .card-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-light); margin-bottom: 0.4rem; }
+    .bento-card.medium h3 { font-family: 'Noto Serif TC', serif; font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem; }
+    .bento-card.medium p { font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.65; }
+
+    .small-card { display: flex; flex-direction: column; padding: 1.4rem; }
+    .small-card .icon-wrap { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; flex-shrink: 0; }
+    .icon-wrap.red { background: rgba(192,57,43,0.1); color: var(--vermillion); }
+    .icon-wrap.jade { background: rgba(30,107,82,0.1); color: var(--jade); }
+    .small-card h4 { font-family: 'Noto Serif TC', serif; font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem; }
+    .small-card p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; flex: 1; word-wrap: break-word; overflow-wrap: break-word; }
+    .small-card-btn { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid rgba(192,57,43,0.08); background: none; border-left: none; border-right: none; border-bottom: none; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-align: left; width: 100%; transition: opacity 0.2s, letter-spacing 0.2s; }
+    .small-card-btn:hover { letter-spacing: 0.15em; }
+    .small-card-btn.red { color: var(--vermillion); }
+    .small-card-btn.jade { color: var(--jade); border-top-color: rgba(30,107,82,0.1); }
+
+    .nature-card { position: relative; overflow: hidden; background: rgba(30,107,82,0.05); }
+    .nature-card .card-content { position: relative; z-index: 2; padding: 1.6rem; max-width: 48%; }
+    .nature-card .bg-img { position: absolute; right: 0; bottom: 0; width: 55%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.3s; }
+    .nature-card:hover .bg-img { opacity: 1; }
+    .nature-card .card-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--jade); margin-bottom: 0.5rem; }
+    .nature-card h3 { font-family: 'Noto Serif TC', serif; font-size: 1.3rem; font-weight: 700; color: var(--ink); margin-bottom: 0.5rem; word-wrap: break-word; overflow-wrap: break-word; }
+    .nature-card p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.7; word-wrap: break-word; overflow-wrap: break-word; }
+
+    /* FESTIVALS */
+    .festivals-section { background: var(--warm-white); }
+    .festival-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin-top: 3rem; }
+    .festival-card { display: block; position: relative; border-radius: 4px; overflow: hidden; height: 360px; cursor: pointer; word-wrap: break-word; overflow-wrap: break-word; text-decoration: none; }
+    .festival-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94); }
+    .festival-card:hover img { transform: scale(1.08); }
+    .festival-card .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(26,26,46,0.88) 0%, rgba(26,26,46,0.1) 55%, transparent 100%); transition: opacity 0.3s; }
+    .festival-card:hover .overlay { opacity: 0.9; }
+    .festival-card .festival-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem; word-wrap: break-word; overflow-wrap: break-word; }
+    .festival-date { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .date-red { color: var(--vermillion-light); }
+    .date-blue { color: #85C1E9; }
+    .date-gold { color: var(--gold-light); }
+    .festival-card h3 { font-family: 'Noto Serif TC', serif; font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem; }
+    .festival-card p { font-size: 0.8rem; color: rgba(255,255,255,0.75); line-height: 1.65; margin-bottom: 1rem; max-height: 0; overflow: hidden; transition: max-height 0.4s ease; word-wrap: break-word; overflow-wrap: break-word; }
+    .festival-card:hover p { max-height: 80px; }
+    .festival-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: var(--gold-light); background: none; border: none; cursor: pointer; padding: 0; text-decoration: none; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .bento-grid { grid-template-columns: repeat(2,1fr); }
+      .bento-card.feature, .bento-card.medium { grid-column: span 2; }
+    }
+    @media (max-width: 768px) {
+      .hero { padding: 72px 1.5rem 0; }
+      .hero-inner { grid-template-columns: 1fr; gap: 1.78rem; padding: 3rem 0 6rem; }
+      .hero-image-wrap { order: -1; }
+      .hero-image-frame img { height: 300px; }
+      .stats-card { bottom: calc(0.25rem - 2em); right: calc(0.25rem - 1.5em); }
+      .hero-vertical-text { display: none; }
+      section { padding: 4rem 1.5rem; }
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-card.feature, .bento-card.medium { grid-column: span 1; }
+      .nature-card p { max-width: 100%; }
+      .festival-grid { grid-template-columns: 1fr; }
+      .nearby-list { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .hero-h1 { font-size: 2.2rem; }
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+      .nearby-list { grid-template-columns: 1fr; }
+    }
+
+    /* PERSONALISATION */
+    .pref-banner { margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem; border-radius: 999px; background: rgba(192,57,43,0.08); color: var(--vermillion, #c0392b); font-size: 0.85rem; }
+    .pref-banner .pref-edit { color: inherit; text-decoration: underline; margin-left: 0.25rem; }
+    .bento-card.pref-match { outline: 2px solid rgba(192,57,43,0.35); outline-offset: 2px; }
+    .nearby-panel { background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 16px; padding: 1.2rem; box-shadow: 0 12px 40px rgba(26,26,46,0.07); }
+    .nearby-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .nearby-head h3 { margin: 0; font-size: 1.1rem; font-family: 'Noto Serif TC', serif; }
+    .nearby-head p { margin: 0.2rem 0 0; color: var(--text-secondary); font-size: 0.82rem; }
+    .nearby-list { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; }
+    .nearby-card { background: var(--parchment); border: 1px solid rgba(192,57,43,0.1); border-radius: 12px; color: inherit; text-decoration: none; overflow: hidden; }
+    .nearby-image { height: 120px; overflow: hidden; background: rgba(192,57,43,0.06); }
+    .nearby-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .nearby-body { padding: 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; }
+    .nearby-body strong { font-size: 0.92rem; color: var(--ink); }
+    .nearby-body small { color: var(--text-secondary); font-size: 0.76rem; line-height: 1.4; }
+    .nearby-distance { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.74rem; color: var(--vermillion); font-weight: 700; }
+    .nearby-empty { text-align: center; padding: 1.4rem 1rem; color: var(--text-secondary); }
+    .nearby-empty h3 { margin: 0 0 0.35rem; }
+    .nearby-empty p { margin: 0; font-size: 0.85rem; }
+  </style>
+
+  <script>
+    import { getUserLocation, getNearbyAttractions, formatDistance } from '../../lib/location';
+
+    const nearBtn = document.getElementById('near-me-btn') as HTMLButtonElement | null;
+    const nearLabel = document.getElementById('near-me-label');
+    const nearbyResults = document.getElementById('nearby-results');
+    const bentoGrid = document.getElementById('bento-grid');
+
+    function escapeHtml(value: string) {
+      return String(value).replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string
+      ));
+    }
+
+    function shortDescription(description = '') {
+      const trimmed = description.replace(/\s+/g, ' ').trim();
+      return trimmed.length > 86 ? `${trimmed.slice(0, 86)}...` : trimmed;
+    }
+
+    function renderNearby(user: { lat: number; lng: number }) {
+      if (!nearbyResults || !bentoGrid) return;
+      const attractionsData = JSON.parse(bentoGrid.getAttribute('data-attractions') || '[]');
+      const nearby = getNearbyAttractions(attractionsData, user, 4).slice(0, 6);
+
+      if (!nearby.length) {
+        nearbyResults.innerHTML = `<div class="nearby-panel"><div class="nearby-empty"><h3>4 公里內沒有符合的景點</h3><p>想看更大範圍，請前往 Explore 頁面。</p></div></div>`;
+        nearbyResults.style.display = '';
+        return;
+      }
+
+      nearbyResults.innerHTML = `
+        <div class="nearby-panel">
+          <div class="nearby-head">
+            <div>
+              <h3>你附近的景點</h3>
+              <p>已依步行距離由近到遠排序。</p>
+            </div>
+          </div>
+          <div class="nearby-list">
+            ${nearby.map((place: any) => `
+              <a class="nearby-card" href="/zh/place/a/${encodeURIComponent(place.id)}">
+                <div class="nearby-image">${place.image ? `<img src="${escapeHtml(place.image)}" alt="${escapeHtml(place.name)}" loading="lazy" />` : ''}</div>
+                <div class="nearby-body">
+                  <strong>${escapeHtml(place.name)}</strong>
+                  <small>${escapeHtml(shortDescription(place.description))}</small>
+                  <span class="nearby-distance"><span class="material-symbols-outlined" style="font-size:12px">directions_walk</span>${formatDistance(place._distKm)}</span>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </div>`;
+      nearbyResults.style.display = '';
+    }
+
+    async function handleNearMe() {
+      if (!nearBtn || !nearLabel) return;
+      nearBtn.disabled = true;
+      nearLabel.textContent = '定位中...';
+      try {
+        const pos = await getUserLocation(8000);
+        renderNearby(pos);
+        nearbyResults?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (err) {
+        if (nearbyResults) {
+          nearbyResults.innerHTML = `<div class="nearby-panel"><div class="nearby-empty"><h3>無法取得位置</h3><p>${escapeHtml(err instanceof Error ? err.message : '請允許瀏覽器使用定位權限。')}</p></div></div>`;
+          nearbyResults.style.display = '';
+        }
+      } finally {
+        nearBtn.disabled = false;
+        nearLabel.textContent = '附近景點';
+      }
+    }
+
+    nearBtn?.addEventListener('click', handleNearMe);
+  </script>
+
+  <script is:inline>
+    // ── SCROLL REVEAL ──
+    const reveals = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => revealObserver.observe(el));
+
+    // ── PARALLAX ──
+    const heroImg = document.querySelector('.hero-image-frame img');
+    if (heroImg) {
+      window.addEventListener('scroll', () => {
+        const s = window.scrollY;
+        if (s < window.innerHeight) heroImg.style.transform = `scale(1.05) translateY(${s * 0.06}px)`;
+      }, { passive: true });
+    }
+
+    // ── COUNTER ANIMATION ──
+    function animateCounter(el, target, suffix = '') {
+      const duration = 1200, start = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+    
+    const statsCard = document.querySelector('.stats-card');
+    if (statsCard) {
+      const so = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+          const nums = statsCard.querySelectorAll('.stat-num');
+          animateCounter(nums[0], 12);
+          animateCounter(nums[1], 800, '+');
+          so.disconnect();
+        }
+      }, { threshold: 0.5 });
+      so.observe(statsCard);
+    }
+
+    // ── CARD TILT ──
+    document.querySelectorAll('.bento-card, .festival-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+        const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+        card.style.transform = `translateY(-4px) rotateY(${dx * 4}deg) rotateX(${-dy * 4}deg)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+        card.style.transition = 'transform 0.5s ease';
+        setTimeout(() => card.style.transition = '', 500);
+      });
+    });
+
+    // ── RANDOMIZATION + PERSONALIZATION FOR ZH ──
+    (function initBentoCards() {
+      const grid = document.querySelector('#bento-grid');
+      if (!grid) return;
+      
+      const attractionsData = JSON.parse(grid.getAttribute('data-attractions') || '[]');
+      if (!attractionsData.length) return;
+      
+      function shuffle(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      let prefs = null;
+      try {
+        const raw = localStorage.getItem('ytp_prefs');
+        if (raw) prefs = JSON.parse(raw);
+      } catch (e) { /* ignore */ }
+      
+      const interests = prefs?.interests || [];
+      const districts = prefs?.districts || [];
+      const hasPrefs = interests.length > 0 || districts.length > 0;
+
+      let shuffled = shuffle(attractionsData);
+
+      function matchesInterest(value, interest) {
+        const v = String(value || '').toLowerCase();
+        const aliases = {
+          food: ['food', 'gourmet', '美食', 'グルメ', '맛있는 음식'],
+          culture: ['culture', '文化', 'カルチャー', '문화'],
+          nature: ['nature', '自然', '자연'],
+          shopping: ['shopping', '購物', '買い物', 'ショッピング', '쇼핑'],
+          relax: ['relax', 'leisure', '休閒', 'レジャー', '여가', '温泉', '온천'],
+          night: ['night', '夜晚', '夜', 'ナイト', '밤', '나이트'],
+        };
+        return (aliases[interest] || [interest]).some(alias => v.includes(String(alias).toLowerCase()));
+      }
+
+      function scoreCard(card) {
+        const cardInts = card.category || [];
+        const cardDist = card.district || '';
+        let s = 0;
+        for (const i of interests) {
+          if (cardInts.some(c => matchesInterest(c, i))) s += 6;
+        }
+        if (districts.length && districts.includes(cardDist)) s += 2;
+        s += Math.min(3, Number(card.suggestion_level || 1));
+        return s;
+      }
+
+      if (hasPrefs) {
+        // Hard filter by selected districts first so off-district picks do not leak in.
+        if (districts.length) {
+          const districtOnly = shuffled.filter((c) => districts.includes(c.district || ''));
+          if (districtOnly.length) shuffled = districtOnly;
+        }
+        shuffled.sort((a, b) => scoreCard(b) - scoreCard(a));
+      }
+
+      const selectedCards = shuffled.slice(0, 4);
+
+      function truncate(text, len) {
+        return text?.length > len ? text.slice(0, len) + '...' : text;
+      }
+
+      // Get original card elements and update them
+      Array.from(grid.children).forEach((el, index) => {
+        const card = selectedCards[index];
+        if (!card) return;
+        const sizeClass = index === 0 ? 'feature' : index === 1 ? 'medium' : 'small-card';
+        el.className = `bento-card ${sizeClass} reveal reveal-delay-${index + 1}`;
+        el.setAttribute('data-interests', (card.category || []).join(','));
+        el.setAttribute('data-district', card.district || '');
+        el.setAttribute('data-id', card.id);
+        
+        if (sizeClass === 'feature') {
+          el.innerHTML = `
+            <div class="card-img">
+              <span class="card-badge badge-history">${card.category[0]}</span>
+              <img src="${card.image}" alt="${card.name}" />
+            </div>
+            <div class="card-body">
+              <h3>${card.name}</h3>
+              <p>${truncate(card.description, 150)}</p>
+              <a class="card-link" href="/zh/place/a/${card.id}">
+                探索
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+              </a>
+            </div>
+          `;
+        } else if (sizeClass === 'medium') {
+          el.innerHTML = `
+            <img class="bg-img" src="${card.image}" alt="${card.name}" />
+            <div class="card-content">
+              <div class="card-label">${card.category[0]}</div>
+              <h3>${card.name}</h3>
+              <p>${truncate(card.description, 80)}</p>
+              <a class="card-link" style="margin-top:0.8rem;color:#fff" href="/zh/place/a/${card.id}">
+                探索
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">arrow_forward</span>
+              </a>
+            </div>
+          `;
+        } else {
+          el.innerHTML = `
+            <div class="icon-wrap red">
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24">place</span>
+            </div>
+            <h4>${card.name}</h4>
+            <p>${truncate(card.description, 80)}</p>
+            <a class="small-card-btn red" href="/zh/place/a/${card.id}">探索 →</a>
+          `;
+        }
+      });
+
+      // Update UI text
+      const label = document.getElementById('bento-label');
+      const title = document.getElementById('bento-title');
+      const sub = document.getElementById('bento-sub');
+      const banner = document.getElementById('pref-banner');
+      const bannerText = document.getElementById('pref-banner-text');
+
+      if (hasPrefs) {
+        if (label) label.textContent = '為你精選';
+        if (title) title.textContent = '你的台北清單';
+        if (sub) sub.textContent = '已依你的偏好重新排序——隨時可前往修改偏好。';
+        if (banner && bannerText) {
+          const parts = [];
+          if (interests.length) parts.push(interests.join(' · '));
+          if (districts.length) parts.push(districts.join(' · '));
+          bannerText.textContent = '依據你的選擇: ' + parts.join(' • ');
+          banner.removeAttribute('hidden');
+        }
+      }
+    })();
+  </script>
+</Layout>

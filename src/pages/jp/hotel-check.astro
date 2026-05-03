@@ -1,0 +1,247 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="セーフステイ・ホテル確認 | 台北コンパス">
+  <main class="checker-page">
+
+    <section class="checker-hero">
+      <div class="hero-inner">
+        <div class="section-label">
+          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:-2px">verified_user</span>
+          Safe Stay
+        </div>
+        <h1>このホテルは合法登録されていますか？</h1>
+        <p class="hero-sub">台北市には619件の公式宿泊データがあります。予約前に宿泊先が合法かどうかを即座に確認しましょう。</p>
+
+        <div class="search-card">
+          <div class="search-input-wrap">
+            <span class="material-symbols-outlined search-icon">search</span>
+            <input
+              type="text"
+              id="hotel-search"
+              placeholder="ホテル名または住所を検索…"
+              autocomplete="off"
+              aria-label="Search hotel name"
+            />
+            <button id="clear-btn" class="clear-btn" aria-label="Clear" style="display:none">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="results-section">
+      <div class="results-inner">
+
+        <!-- idle state -->
+        <div id="idle-state" class="idle-state">
+          <span class="material-symbols-outlined idle-icon">manage_search</span>
+          <p>ホテル名または住所を入力して、台北市政府への合法登録を確認してください。</p>
+          <div class="risk-info">
+            <span class="material-symbols-outlined" style="color:#e67e22;font-size:20px">warning</span>
+            <span><strong>重要な理由：</strong> 無許可の短期賃貸は、消防安全・保険・消費者保護が不十分な場合があります。予約前に必ず確認を。</span>
+          </div>
+        </div>
+
+        <!-- results list -->
+        <div id="result-state" style="display:none">
+          <div id="result-summary" class="result-summary"></div>
+          <div id="result-list" class="result-list"></div>
+          <!-- not found panel -->
+          <div id="not-found" class="not-found-panel" style="display:none">
+            <span class="material-symbols-outlined nf-icon">gpp_bad</span>
+            <h3>合法ホテル名簿に見つかりません</h3>
+            <p id="nf-query"></p>
+            <div class="nf-warning">
+              <span class="material-symbols-outlined">warning</span>
+              <span>この宿泊施設は台北市の公式ホテル登録に見当たりません。無許可の短期賃貸の可能性があり、消防・衛生・消費者保護のリスクが伴います。</span>
+            </div>
+            <div class="nf-actions">
+              <p class="nf-alt-label">近隣の合法登録ホテル：</p>
+              <div id="alt-list" class="result-list alt-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <style is:global>
+    .checker-page { background: var(--parchment, #FDF6E3); min-height: 100vh; }
+
+    /* ── Hero ── */
+    .checker-hero { background: linear-gradient(135deg, #1a3a5c 0%, #2e6da4 100%); color: #fff; padding: 120px 2rem 4rem; }
+    .hero-inner { max-width: 720px; margin: 0 auto; }
+    .section-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; margin-bottom: 0.75rem; }
+    .checker-hero h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900; margin: 0 0 0.75rem; line-height: 1.15; }
+    .hero-sub { font-size: 1rem; opacity: 0.88; line-height: 1.7; margin-bottom: 2rem; }
+
+    /* ── Search card ── */
+    .search-card { background: #fff; border-radius: 14px; padding: 0.5rem; box-shadow: 0 8px 32px rgba(0,0,0,0.18); }
+    .search-input-wrap { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.75rem; }
+    .search-icon { color: #2e6da4; font-size: 22px; flex-shrink: 0; }
+    #hotel-search { flex: 1; border: none; outline: none; font-size: 1.05rem; font-family: inherit; color: #1a1a2e; background: transparent; }
+    #hotel-search::placeholder { color: #aaa; }
+    .clear-btn { background: none; border: none; cursor: pointer; color: #aaa; padding: 0.25rem; display: flex; align-items: center; }
+    .clear-btn:hover { color: #555; }
+
+    /* ── Results ── */
+    .results-section { padding: 2.5rem 2rem 4rem; }
+    .results-inner { max-width: 720px; margin: 0 auto; }
+
+    .idle-state { text-align: center; color: #888; padding: 2rem 0; }
+    .idle-icon { font-size: 48px; color: #2e6da4; opacity: 0.4; display: block; margin: 0 auto 1rem; }
+    .risk-info { display: flex; gap: 0.6rem; align-items: flex-start; background: #fff8ee; border: 1px solid #f0c27f; border-radius: 10px; padding: 0.85rem 1rem; margin-top: 1.5rem; font-size: 0.88rem; color: #7a5200; text-align: left; }
+
+    .result-summary { font-size: 0.85rem; color: #888; margin-bottom: 1rem; }
+    .result-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    /* ── Hotel card ── */
+    .hotel-card { display: block; background: #fff; border: 1.5px solid #c8dff5; border-radius: 12px; padding: 1.1rem 1.25rem; text-decoration: none; color: inherit; transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease; }
+    .hotel-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(46,109,164,0.14); border-color: #2e6da4; }
+    .hotel-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+    .hotel-name { font-weight: 700; font-size: 1rem; color: #1a3a5c; line-height: 1.3; }
+    .legal-tag { display: inline-flex; align-items: center; gap: 0.25rem; background: #eaf7ed; color: #2e7d52; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px; white-space: nowrap; flex-shrink: 0; }
+    .legal-tag .material-symbols-outlined { font-size: 13px; }
+    .hotel-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1.2rem; margin-top: 0.55rem; font-size: 0.82rem; color: #555; }
+    .hotel-meta span { display: flex; align-items: center; gap: 0.25rem; }
+    .hotel-meta .material-symbols-outlined { font-size: 14px; color: #2e6da4; }
+    .hotel-price { font-size: 0.85rem; font-weight: 700; color: #1a3a5c; margin-top: 0.4rem; }
+
+    /* ── Not found ── */
+    .not-found-panel { text-align: center; padding: 1rem 0 0; }
+    .nf-icon { font-size: 52px; color: #e74c3c; display: block; margin: 0 auto 0.75rem; }
+    .not-found-panel h3 { font-family: 'Noto Serif TC', serif; font-size: 1.4rem; color: #c0392b; margin: 0 0 0.5rem; }
+    #nf-query { font-size: 0.9rem; color: #888; margin-bottom: 1rem; }
+    .nf-warning { display: flex; gap: 0.6rem; align-items: flex-start; background: #fff0f0; border: 1px solid #f5b7b1; border-radius: 10px; padding: 0.9rem 1rem; font-size: 0.88rem; color: #7b2020; text-align: left; margin-bottom: 1.75rem; }
+    .nf-warning .material-symbols-outlined { color: #e74c3c; font-size: 20px; flex-shrink: 0; }
+    .nf-alt-label { font-weight: 700; font-size: 0.9rem; color: #1a3a5c; text-align: left; margin-bottom: 0.75rem; }
+    .alt-list { border-top: 1px dashed #ddd; padding-top: 0.75rem; }
+
+    @media (max-width: 640px) {
+      .checker-hero { padding: 100px 1.25rem 3rem; }
+      .results-section { padding: 1.75rem 1.25rem 3rem; }
+    }
+  </style>
+
+  <script>
+    import { getHotelsForLang, type Hotel } from '../../lib/hotelData';
+
+    const hotels = getHotelsForLang('jp');
+
+    const input = document.getElementById('hotel-search') as HTMLInputElement;
+    const clearBtn = document.getElementById('clear-btn') as HTMLButtonElement;
+    const idleState = document.getElementById('idle-state')!;
+    const resultState = document.getElementById('result-state')!;
+    const resultSummary = document.getElementById('result-summary')!;
+    const resultList = document.getElementById('result-list')!;
+    const notFound = document.getElementById('not-found')!;
+    const nfQuery = document.getElementById('nf-query')!;
+    const altList = document.getElementById('alt-list')!;
+
+    function normalize(s: string) {
+      return s.toLowerCase().replace(/\s+/g, '');
+    }
+
+    function formatPrice(p: number | null, q: number | null) {
+      if (!p && !q) return null;
+      const fmt = (n: number) => 'NT$' + n.toLocaleString();
+      if (p && q) return `${fmt(p)} – ${fmt(q)} / 泊`;
+      if (p) return `${fmt(p)}〜 / 泊`;
+      return null;
+    }
+
+    function renderCard(h: Hotel, highlight = '') {
+      const price = formatPrice(h.lowest_price, h.highest_price);
+      const hl = normalize(highlight);
+
+      function boldMatch(text: string) {
+        if (!hl) return escHtml(text);
+        const norm = normalize(text);
+        const idx = norm.indexOf(hl);
+        if (idx === -1) return escHtml(text);
+        return escHtml(text.slice(0, idx)) + '<mark>' + escHtml(text.slice(idx, idx + hl.length)) + '</mark>' + escHtml(text.slice(idx + hl.length));
+      }
+
+      return `
+        <a class="hotel-card" href="/jp/hotel/${h.id}">
+          <div class="hotel-card-head">
+            <div class="hotel-name">${boldMatch(h.name)}</div>
+            <span class="legal-tag">
+              <span class="material-symbols-outlined">verified</span>
+              Legal
+            </span>
+          </div>
+          <div class="hotel-meta">
+            <span><span class="material-symbols-outlined">subway</span>${escHtml(h.closest_mrt)}</span>
+            <span><span class="material-symbols-outlined">location_on</span>${escHtml(h.district)}</span>
+            ${h.rooms ? `<span><span class="material-symbols-outlined">bed</span>${h.rooms}室</span>` : ''}
+          </div>
+          <div class="hotel-meta" style="margin-top:0.2rem">
+            <span><span class="material-symbols-outlined">home</span>${boldMatch(h.location)}</span>
+          </div>
+          ${price ? `<div class="hotel-price">${price}</div>` : ''}
+        </a>`;
+    }
+
+    function escHtml(s: string) {
+      return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] as string));
+    }
+
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
+    function search(query: string) {
+      const q = query.trim();
+      clearBtn.style.display = q ? '' : 'none';
+
+      if (!q) {
+        idleState.style.display = '';
+        resultState.style.display = 'none';
+        return;
+      }
+
+      idleState.style.display = 'none';
+      resultState.style.display = '';
+
+      const nq = normalize(q);
+      const matches = (hotels as Hotel[]).filter(h =>
+        normalize(h.name).includes(nq) ||
+        normalize(h.location).includes(nq) ||
+        normalize(h.address).includes(nq) ||
+        normalize(h.district).includes(nq)
+      );
+
+      if (matches.length > 0) {
+        notFound.style.display = 'none';
+        resultSummary.textContent = `${matches.length}件の合法ホテルが見つかりました`;
+        resultList.innerHTML = matches.slice(0, 20).map(h => renderCard(h, q)).join('');
+      } else {
+        resultSummary.textContent = '';
+        resultList.innerHTML = '';
+        notFound.style.display = '';
+        nfQuery.textContent = `"${q}" — not found in the Taipei official hotel registry`;
+
+        // Suggest hotels by inferred district from query
+        const districtHint = (hotels as Hotel[]).find(h => normalize(h.district).includes(nq) || normalize(h.address).includes(nq));
+        const targetDistrict = districtHint?.district ?? null;
+        const alts = (hotels as Hotel[])
+          .filter(h => !targetDistrict || h.district === targetDistrict)
+          .slice(0, 5);
+        altList.innerHTML = alts.map(h => renderCard(h)).join('');
+      }
+    }
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => search(input.value), 150);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      search('');
+      input.focus();
+    });
+  </script>
+</Layout>

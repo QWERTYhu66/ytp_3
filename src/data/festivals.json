@@ -1,0 +1,562 @@
+[
+  {
+    "slug": "lunar-new-year",
+    "months": [
+      1,
+      2
+    ],
+    "date": {
+      "en": "Lunar 1/1 — late Jan to mid Feb",
+      "zh": "農曆正月初一 — 1月下旬至2月中旬",
+      "jp": "旧暦1月1日 — 1月下旬〜2月中旬",
+      "kr": "음력 1월 1일 — 1월 하순~2월 중순"
+    },
+    "emoji": "🧧",
+    "color": "vermillion",
+    "title": {
+      "en": "Lunar New Year",
+      "zh": "農曆新年",
+      "jp": "旧正月",
+      "kr": "설날 (음력설)"
+    },
+    "description": {
+      "en": "Taiwan's biggest family holiday. Red lanterns line Dihua Street's year-end market, temples overflow with incense at midnight, and every shop spills peanut brittle, dried fruits and persimmons onto the sidewalk.",
+      "zh": "台灣最重要的家族節日。迪化街年貨大街紅燈高掛，午夜的寺廟香火鼎盛，騎樓下擺滿花生糖、蜜餞與柿餅。",
+      "jp": "台湾で最大の家族行事。迪化街の年末市場は赤い提灯で彩られ、真夜中の寺院は線香の煙に包まれ、落花生菓子・ドライフルーツ・柿が軒先を埋め尽くします。",
+      "kr": "대만 최대 명절. 디화제의 연말 시장에는 붉은 등이 걸리고, 자정의 사원은 향불로 가득하며, 땅콩 엿·말린 과일·곶감이 거리마다 펼쳐집니다."
+    },
+    "destinations": [
+      "5",
+      "3",
+      "55"
+    ]
+  },
+  {
+    "slug": "taipei-lantern-festival",
+    "months": [
+      2
+    ],
+    "date": {
+      "en": "Lunar 1/15 — usually mid Feb to early Mar",
+      "zh": "元宵節 — 通常在2月中旬至3月初",
+      "jp": "元宵節 — 通常2月中旬〜3月上旬",
+      "kr": "정월대보름 — 보통 2월 중순~3월 초"
+    },
+    "emoji": "🏮",
+    "color": "amber",
+    "title": {
+      "en": "Taipei Lantern Festival",
+      "zh": "台北燈節",
+      "jp": "台北ランタンフェスティバル",
+      "kr": "타이베이 등 축제"
+    },
+    "description": {
+      "en": "Enormous themed lantern installations light up Liberty Square and the surrounding blocks. Pair with sky lantern releases up in Pingxi for the full effect.",
+      "zh": "自由廣場與周邊街區被巨型主題燈組點亮，再搭配平溪放天燈才是完整體驗。",
+      "jp": "自由広場と周辺一帯を巨大なテーマ灯籠が照らします。平溪のスカイランタンと組み合わせれば完璧。",
+      "kr": "자유광장과 주변 거리가 거대한 테마 등불로 빛납니다. 핑시의 천등 날리기와 함께 즐기면 완벽합니다."
+    },
+    "destinations": [
+      "9",
+      "13",
+      "7"
+    ]
+  },
+  {
+    "slug": "yangmingshan-flower-festival",
+    "months": [
+      2,
+      3
+    ],
+    "date": {
+      "en": "Mid Feb — late Mar (cherry blossom & azalea peak)",
+      "zh": "2月中旬 — 3月下旬（櫻花與杜鵑盛開）",
+      "jp": "2月中旬〜3月下旬（桜とツツジ満開）",
+      "kr": "2월 중순~3월 하순 (벚꽃·철쭉 절정)"
+    },
+    "emoji": "🌸",
+    "color": "coral",
+    "title": {
+      "en": "Yangmingshan Flower Festival",
+      "zh": "陽明山花季",
+      "jp": "陽明山花祭り",
+      "kr": "양밍산 꽃 축제"
+    },
+    "description": {
+      "en": "Cherry blossoms first, then a riot of azaleas along Zhuzihu. Pack a picnic — the steaming sulphur vents at Xiaoyoukeng make a dramatic next stop.",
+      "zh": "先是櫻花，接著竹子湖的杜鵑盛開成海。帶著野餐上山，順道去小油坑欣賞硫氣裊裊的火山景觀。",
+      "jp": "まず桜、続いて竹子湖のツツジが一面に咲き乱れます。お弁当を持って、硫黄が噴き出す小油坑にも足を伸ばしたい。",
+      "kr": "먼저 벚꽃, 이어 주쯔후 일대의 철쭉이 만발합니다. 도시락을 싸서 유황이 피어오르는 샤오유컹까지 이어가세요."
+    },
+    "destinations": [
+      "2",
+      "70"
+    ]
+  },
+  {
+    "slug": "228-peace-memorial",
+    "months": [
+      2
+    ],
+    "date": {
+      "en": "February 28 (national holiday)",
+      "zh": "2月28日（國定假日）",
+      "jp": "2月28日（祝日）",
+      "kr": "2월 28일 (국경일)"
+    },
+    "emoji": "🕊️",
+    "color": "ink",
+    "title": {
+      "en": "228 Peace Memorial Day",
+      "zh": "二二八和平紀念日",
+      "jp": "二・二八和平記念日",
+      "kr": "2·28 평화기념일"
+    },
+    "description": {
+      "en": "Solemn day of remembrance for the 1947 uprising. The 228 Peace Park and the National Taiwan Museum inside it hold ceremonies; the surrounding government quarter is quiet and reflective.",
+      "zh": "紀念1947年二二八事件的肅穆日子。二二八和平紀念公園及園內的國立臺灣博物館會舉辦紀念儀式，總統府一帶格外寧靜。",
+      "jp": "1947年の二・二八事件を追悼する静謐な日。二二八和平公園内の国立台湾博物館で式典が行われ、総統府周辺はいつもより静かです。",
+      "kr": "1947년 2·28 사건을 추모하는 엄숙한 날. 2·28 평화공원과 공원 내 국립타이완박물관에서 기념식이 열리며, 총통부 일대는 차분한 분위기입니다."
+    },
+    "destinations": [
+      "46",
+      "47",
+      "14"
+    ]
+  },
+  {
+    "slug": "qingming",
+    "months": [
+      4
+    ],
+    "date": {
+      "en": "April 4 or 5 (national holiday)",
+      "zh": "4月4日或5日（國定假日）",
+      "jp": "4月4日または5日（祝日）",
+      "kr": "4월 4일 또는 5일 (국경일)"
+    },
+    "emoji": "🌿",
+    "color": "jade",
+    "title": {
+      "en": "Tomb-Sweeping (Qingming) Day",
+      "zh": "清明節",
+      "jp": "清明節",
+      "kr": "청명절"
+    },
+    "description": {
+      "en": "Families gather to sweep ancestral graves and burn offerings. Taipei's Martyrs' Shrine holds a formal honour-guard ceremony. Expect long bank holiday weekends and packed highways.",
+      "zh": "家族掃墓、祭祖的日子。忠烈祠會舉行莊嚴的交接儀式，整個連假國道也會非常擁擠。",
+      "jp": "一族揃って祖先の墓を掃除する日。忠烈祠では厳粛な儀仗交代式が行われ、連休中の高速道路は大混雑します。",
+      "kr": "가족이 모여 조상의 묘를 청소하는 날. 충렬사에서는 엄숙한 위병 교대식이 열리며, 연휴 동안 고속도로는 매우 혼잡합니다."
+    },
+    "destinations": [
+      "12"
+    ]
+  },
+  {
+    "slug": "baosheng-cultural-festival",
+    "months": [
+      4,
+      5
+    ],
+    "date": {
+      "en": "Lunar 3/15 onward — about 6 weeks",
+      "zh": "農曆3月15日起 — 為期約六週",
+      "jp": "旧暦3月15日以降 — 約6週間",
+      "kr": "음력 3월 15일부터 약 6주간"
+    },
+    "emoji": "🛕",
+    "color": "amber",
+    "title": {
+      "en": "Baosheng Cultural Festival",
+      "zh": "保生文化祭",
+      "jp": "保生文化祭",
+      "kr": "바오성 문화제"
+    },
+    "description": {
+      "en": "Dalongdong Baoan Temple throws open its 250-year-old doors for folk opera, fire-lion dances, and a plague-god parade through the Dadaocheng streets. Taiwan's biggest temple festival inside Taipei proper.",
+      "zh": "大龍峒保安宮敞開兩百五十年的廟門，歌仔戲連唱數週，放火獅、遶境隊伍穿梭大稻埕街巷。台北市區規模最盛大的廟會。",
+      "jp": "築250年の大龍峒保安宮が門を開き、台湾オペラや火獅舞、疫病神の行列が大稲埕を練り歩きます。台北市街で最大級の廟祭です。",
+      "kr": "250년 된 다룽둥 바오안궁이 문을 활짝 열고, 대만 전통 오페라와 화사자 춤, 역병신 행렬이 다다오청 골목을 누빕니다. 타이베이 시내 최대 사원 축제."
+    },
+    "destinations": [
+      "32",
+      "44",
+      "13"
+    ]
+  },
+  {
+    "slug": "mazu-pilgrimage",
+    "months": [
+      4,
+      5
+    ],
+    "date": {
+      "en": "Lunar 3/23 — Matsu's birthday",
+      "zh": "農曆3月23日 — 媽祖聖誕",
+      "jp": "旧暦3月23日 — 媽祖の誕生日",
+      "kr": "음력 3월 23일 — 마조 탄신일"
+    },
+    "emoji": "🎐",
+    "color": "vermillion",
+    "title": {
+      "en": "Matsu's Birthday",
+      "zh": "媽祖聖誕",
+      "jp": "媽祖の生誕祭",
+      "kr": "마조 탄신일"
+    },
+    "description": {
+      "en": "The island-wide Matsu pilgrimage ends in central Taiwan, but Taipei's big Matsu temples — Guandu, Songshan Ciyou — hold their own processions with drums, flags and firecrackers.",
+      "zh": "全台遶境在中部結束，但台北的關渡宮、松山慈祐宮依然敲鑼打鼓、舞旗放鞭炮，自己有一場熱鬧的遶境。",
+      "jp": "大規模な媽祖巡礼は中部で終わりますが、台北では関渡宮や松山慈祐宮が太鼓と旗と爆竹で独自の行列を繰り広げます。",
+      "kr": "전국 규모의 마조 순례는 중부에서 끝나지만, 타이베이의 관두궁과 쑹산 츠유궁은 북과 깃발, 폭죽으로 자체 행렬을 벌입니다."
+    },
+    "destinations": [
+      "16",
+      "42",
+      "41"
+    ]
+  },
+  {
+    "slug": "dragon-boat-festival",
+    "months": [
+      5,
+      6
+    ],
+    "date": {
+      "en": "Lunar 5/5 — late May or June",
+      "zh": "農曆5月5日 — 5月下旬或6月",
+      "jp": "旧暦5月5日 — 5月下旬または6月",
+      "kr": "음력 5월 5일 — 5월 하순 또는 6월"
+    },
+    "emoji": "🐉",
+    "color": "jade",
+    "title": {
+      "en": "Dragon Boat Festival",
+      "zh": "端午節",
+      "jp": "端午節",
+      "kr": "단오절"
+    },
+    "description": {
+      "en": "Dajia Riverside Park hosts Taipei's dragon boat races on a three-day weekend. Meanwhile Dihua Street vendors pile up freshly-tied zongzi by the hundred. Don't forget to stand an egg at noon.",
+      "zh": "端午連假大佳河濱公園鑼鼓喧天比龍舟，迪化街賣粽攤子綁得手都酸了。別忘了正午站立雞蛋。",
+      "jp": "端午の三連休、大佳河濱公園でドラゴンボートレースが繰り広げられ、迪化街の屋台は粽を山と積み上げます。正午に卵を立てるのもお忘れなく。",
+      "kr": "단오 연휴 동안 다자 강변공원에서는 드래곤보트 경기가, 디화제 노점에서는 갓 빚은 쫑즈가 산처럼 쌓입니다. 정오에 달걀 세우기도 잊지 마세요."
+    },
+    "destinations": [
+      "65",
+      "5",
+      "17"
+    ]
+  },
+  {
+    "slug": "qixi",
+    "months": [
+      8
+    ],
+    "date": {
+      "en": "Lunar 7/7 — early to mid August",
+      "zh": "農曆7月7日 — 8月上旬至中旬",
+      "jp": "旧暦7月7日 — 8月上旬〜中旬",
+      "kr": "음력 7월 7일 — 8월 상순~중순"
+    },
+    "emoji": "💝",
+    "color": "pink",
+    "title": {
+      "en": "Qixi — Chinese Valentine's",
+      "zh": "七夕 — 中國情人節",
+      "jp": "七夕 — 中国版バレンタイン",
+      "kr": "칠석 — 중국식 밸런타인"
+    },
+    "description": {
+      "en": "Couples and (many) hopeful singles flock to Xiahai City God Temple to plead with Yue Lao, the old man who ties red threads of fate. Expect long queues and a faint smell of incense all the way down Dihua Street.",
+      "zh": "情侶與單身者擠進霞海城隍廟拜月老求紅線。迪化街從入口到廟口人龍不斷，香火瀰漫整條街。",
+      "jp": "恋人たち、そして恋を求める独身者が霞海城隍廟に集い、縁結びの月下老人に赤い糸を願います。迪化街の入口から行列が続きます。",
+      "kr": "연인들과 연인을 꿈꾸는 싱글들이 샤하이 성황묘에 모여 월하노인께 붉은 실을 빕니다. 디화제 입구부터 긴 줄이 이어집니다."
+    },
+    "destinations": [
+      "55",
+      "25"
+    ]
+  },
+  {
+    "slug": "ghost-festival",
+    "months": [
+      8,
+      9
+    ],
+    "date": {
+      "en": "Lunar 7 — all month — peak on 7/15",
+      "zh": "農曆七月 — 中元節7/15達到高峰",
+      "jp": "旧暦7月 — 中元節7/15がピーク",
+      "kr": "음력 7월 — 중원절(7/15)이 절정"
+    },
+    "emoji": "🔥",
+    "color": "vermillion",
+    "title": {
+      "en": "Ghost Festival & Ghost Month",
+      "zh": "中元節（鬼月）",
+      "jp": "中元節（鬼月）",
+      "kr": "중원절 (귀월)"
+    },
+    "description": {
+      "en": "For a full lunar month, spirits are said to roam among the living. Offerings appear outside every shop, joss paper burns in braziers at every corner, and temples hold elaborate pudu rites for the hungry ghosts.",
+      "zh": "整個農曆七月「好兄弟」出來走走，店家門口擺滿普渡供品，街角金爐日夜不熄，寺廟連日舉辦盛大的普渡法會。",
+      "jp": "旧暦七月のひと月、霊が人の世を訪ねると言われ、店先には供物が並び、街角の金炉では紙銭が燃え続け、寺院では盛大な普度法要が行われます。",
+      "kr": "음력 7월 한 달 내내 영혼이 이승을 거닌다고 여겨집니다. 가게 앞에는 공양물이 놓이고, 거리 모퉁이 금로에서는 지전이 타오르며, 사원에서는 성대한 보도의식이 열립니다."
+    },
+    "destinations": [
+      "3",
+      "55",
+      "32"
+    ]
+  },
+  {
+    "slug": "mid-autumn-festival",
+    "months": [
+      9,
+      10
+    ],
+    "date": {
+      "en": "Lunar 8/15 — September or early October",
+      "zh": "農曆8月15日 — 9月或10月初",
+      "jp": "旧暦8月15日 — 9月または10月上旬",
+      "kr": "음력 8월 15일 — 9월 또는 10월 초"
+    },
+    "emoji": "🌕",
+    "color": "gold",
+    "title": {
+      "en": "Mid-Autumn Festival",
+      "zh": "中秋節",
+      "jp": "中秋節",
+      "kr": "추석 (중추절)"
+    },
+    "description": {
+      "en": "Mooncakes, pomelos, and Taiwan's national obsession: roadside BBQ. Da'an Forest Park and the Dajia Riverside fill up with families grilling under the full moon. Bring wet wipes.",
+      "zh": "吃月餅、剝柚子，還有台灣人獨有的——中秋烤肉。大安森林公園、大佳河濱整排家族升火開烤。記得帶濕紙巾。",
+      "jp": "月餅、ザボン、そして台湾名物の中秋バーベキュー。大安森林公園や大佳河濱では家族連れが満月の下で焼き肉を楽しみます。ウェットティッシュ必携。",
+      "kr": "월병과 유자, 그리고 대만만의 명물인 중추절 바비큐. 다안 삼림공원과 다자 강변에는 보름달 아래 온 가족이 모여 고기를 굽습니다. 물티슈 필수."
+    },
+    "destinations": [
+      "17",
+      "65",
+      "0"
+    ]
+  },
+  {
+    "slug": "double-ninth",
+    "months": [
+      10
+    ],
+    "date": {
+      "en": "Lunar 9/9 — usually October",
+      "zh": "農曆9月9日 — 通常在10月",
+      "jp": "旧暦9月9日 — 通常10月",
+      "kr": "음력 9월 9일 — 보통 10월"
+    },
+    "emoji": "⛰️",
+    "color": "jade",
+    "title": {
+      "en": "Double Ninth (Senior's) Day",
+      "zh": "重陽節（敬老節）",
+      "jp": "重陽節（敬老の日）",
+      "kr": "중양절 (경로의 날)"
+    },
+    "description": {
+      "en": "Tradition says climb a high place and drink chrysanthemum tea. Yangmingshan, Maokong and the Four Beasts trails all fit — and the weather's finally cool enough to enjoy them.",
+      "zh": "古人登高、喝菊花茶的日子。陽明山、貓空、四獸山步道都合適——天氣總算涼爽，正是走路的好時節。",
+      "jp": "高い所に登り菊茶を味わう日。陽明山、猫空、四獣山の歩道が最適で、気候もようやく歩きやすくなります。",
+      "kr": "높은 곳에 올라 국화차를 마시는 날. 양밍산, 마오콩, 사수산 트레일 모두 좋으며, 날씨도 드디어 걷기 좋은 선선함입니다."
+    },
+    "destinations": [
+      "2",
+      "30"
+    ]
+  },
+  {
+    "slug": "double-ten",
+    "months": [
+      10
+    ],
+    "date": {
+      "en": "October 10 (national holiday)",
+      "zh": "10月10日（國慶日）",
+      "jp": "10月10日（国慶日）",
+      "kr": "10월 10일 (건국기념일)"
+    },
+    "emoji": "🎆",
+    "color": "vermillion",
+    "title": {
+      "en": "National Day (Double Ten)",
+      "zh": "國慶日（雙十節）",
+      "jp": "国慶節（双十節）",
+      "kr": "건국기념일 (쌍십절)"
+    },
+    "description": {
+      "en": "Morning flag ceremony outside the Presidential Office, air force flyover, and fireworks in the evening at a rotating venue (check current year). Chiang Kai-shek Memorial fills up for the gala.",
+      "zh": "上午總統府前升旗、國軍戰機分列式，晚間在輪流舉辦的地點放煙火（請查詢當年度）。中正紀念堂則是晚間晚會的主場。",
+      "jp": "午前中は総統府前で国旗掲揚と空軍のフライオーバー、夜は毎年異なる会場で花火（当年度要確認）。中正紀念堂では夜に大規模な祝典が行われます。",
+      "kr": "오전에는 총통부 앞에서 국기 게양과 공군 분열식, 저녁에는 매년 바뀌는 장소에서 불꽃놀이(당해 확인 필요). 중정기념당에서는 저녁 대형 갈라가 열립니다."
+    },
+    "destinations": [
+      "14",
+      "9",
+      "28"
+    ]
+  },
+  {
+    "slug": "taiwan-pride",
+    "months": [
+      10
+    ],
+    "date": {
+      "en": "Last Saturday of October",
+      "zh": "10月最後一個週六",
+      "jp": "10月最終土曜日",
+      "kr": "10월 마지막 토요일"
+    },
+    "emoji": "🌈",
+    "color": "pink",
+    "title": {
+      "en": "Taiwan Pride Parade",
+      "zh": "台灣同志遊行",
+      "jp": "台湾プライド・パレード",
+      "kr": "대만 프라이드 퍼레이드"
+    },
+    "description": {
+      "en": "East Asia's largest pride — 100,000+ marchers set off from the Presidential Office and wind through Xinyi. The after-party scatters across Red House, Ximending and the Xinyi clubs.",
+      "zh": "東亞最大的同志遊行，十萬人以上從總統府出發繞行信義區。西門紅樓、西門町、信義夜店延續成通宵的 After Party。",
+      "jp": "東アジア最大のプライド。10万人以上が総統府前から信義区を練り歩きます。西門紅樓・西門町・信義のクラブがそのままアフターパーティーになります。",
+      "kr": "동아시아 최대 규모의 프라이드 행진. 10만 명 이상이 총통부에서 출발해 신이구를 행진합니다. 시먼홍루·시먼딩·신이 클럽이 그대로 애프터 파티장으로."
+    },
+    "destinations": [
+      "14",
+      "23",
+      "7"
+    ]
+  },
+  {
+    "slug": "taipei-hot-springs",
+    "months": [
+      10,
+      11
+    ],
+    "date": {
+      "en": "Late October — November",
+      "zh": "10月底 — 11月",
+      "jp": "10月末〜11月",
+      "kr": "10월 말~11월"
+    },
+    "emoji": "♨️",
+    "color": "coral",
+    "title": {
+      "en": "Taipei Hot Springs Season",
+      "zh": "台北溫泉季",
+      "jp": "台北温泉季",
+      "kr": "타이베이 온천 시즌"
+    },
+    "description": {
+      "en": "Xinbeitou rolls out mikoshi parades, illuminated bath houses and discount passes. The old Hot Spring Museum runs special exhibitions and the tiny open-air ryotenburo on Beitou Park fills every night.",
+      "zh": "新北投祭典抬神轎、溫泉旅館夜間打燈，發行優惠泡湯券。溫泉博物館推出特展，公園裡的露天浴場每晚擠得水泄不通。",
+      "jp": "新北投では神輿行列、旅館のライトアップ、割引入浴券が並びます。温泉博物館の特別展と、北投公園の小さな露天風呂は毎夜満員に。",
+      "kr": "신베이터우에서는 가마 행렬, 온천장 야간 조명, 할인 입욕권이 풀립니다. 온천박물관 특별전과 베이터우 공원의 작은 노천탕은 매일 밤 만원입니다."
+    },
+    "destinations": [
+      "6",
+      "72",
+      "36"
+    ]
+  },
+  {
+    "slug": "golden-horse-awards",
+    "months": [
+      11
+    ],
+    "date": {
+      "en": "Third or fourth weekend of November",
+      "zh": "11月第三或第四個週末",
+      "jp": "11月第3または第4週末",
+      "kr": "11월 셋째 또는 넷째 주말"
+    },
+    "emoji": "🎬",
+    "color": "gold",
+    "title": {
+      "en": "Golden Horse Awards & Film Festival",
+      "zh": "金馬獎 / 金馬影展",
+      "jp": "金馬賞・金馬映画祭",
+      "kr": "금마장 영화제"
+    },
+    "description": {
+      "en": "The Chinese-language world's most prestigious film awards — three weeks of screenings at SPOT Taipei and Huashan, a red carpet at Sun Yat-sen Memorial Hall, then a very glamorous party district-wide.",
+      "zh": "華語圈最受矚目的電影盛會。光點台北、華山放映三週，國父紀念館紅毯走好走滿，之後整個城市熱鬧到凌晨。",
+      "jp": "中華圏最高峰の映画祭。光點台北と華山で3週間の上映、孫文紀念館でのレッドカーペット、そして街全体のアフターパーティーまで華やかに続きます。",
+      "kr": "중화권 최고 권위의 영화제. 광디엔타이베이와 화산에서 3주간의 상영, 국부기념관의 레드카펫, 그 뒤 도시 전역의 화려한 애프터 파티까지."
+    },
+    "destinations": [
+      "71",
+      "54",
+      "28"
+    ]
+  },
+  {
+    "slug": "dongzhi",
+    "months": [
+      12
+    ],
+    "date": {
+      "en": "December 21 or 22 (winter solstice)",
+      "zh": "12月21日或22日（冬至）",
+      "jp": "12月21日または22日（冬至）",
+      "kr": "12월 21일 또는 22일 (동지)"
+    },
+    "emoji": "🍡",
+    "color": "amber",
+    "title": {
+      "en": "Dongzhi (Winter Solstice)",
+      "zh": "冬至",
+      "jp": "冬至",
+      "kr": "동지"
+    },
+    "description": {
+      "en": "Families eat tangyuan (glutinous rice balls in sweet soup) to mark the year getting warmer. Dihua Street's dry-goods vendors sell the dough balls by the kilo, and every temple bowls up a free portion for worshippers.",
+      "zh": "吃湯圓表示又長一歲。迪化街南北貨老舖一袋袋秤賣糯米圓，寺廟也會煮一大鍋免費分送信徒。",
+      "jp": "白玉団子の入った甘いスープ「湯圓」を食べて一つ年を取る日。迪化街の乾物店は湯圓をキロ単位で売り、寺院では参拝者に無料で振る舞います。",
+      "kr": "찹쌀 경단 '탕위안'을 먹으며 한 살을 더 먹는 날. 디화제의 건어물 상점은 반죽을 킬로그램 단위로 팔고, 사원에서는 참배객에게 무료로 한 그릇씩 나눠줍니다."
+    },
+    "destinations": [
+      "3",
+      "13"
+    ]
+  },
+  {
+    "slug": "taipei-101-nye",
+    "months": [
+      12
+    ],
+    "date": {
+      "en": "December 31 — midnight",
+      "zh": "12月31日 — 跨年夜",
+      "jp": "12月31日 — カウントダウン",
+      "kr": "12월 31일 — 자정"
+    },
+    "emoji": "🎇",
+    "color": "vermillion",
+    "title": {
+      "en": "Taipei 101 NYE Fireworks",
+      "zh": "台北101跨年煙火",
+      "jp": "台北101カウントダウン花火",
+      "kr": "타이베이 101 새해 불꽃놀이"
+    },
+    "description": {
+      "en": "Asia's second-most-watched countdown. 360 seconds of pyrotechnics climb the tower while a free open-air concert plays outside Sun Yat-sen Memorial. MRT runs all night; plan your viewing spot two hours early.",
+      "zh": "亞洲收視第二高的跨年。煙火自101塔身逐層上升，共360秒；國父紀念館外的戶外演唱會同步進行。捷運徹夜營運，建議兩小時前先卡位。",
+      "jp": "アジアで二番目に視聴されるカウントダウン。101のタワーを駆け上がる360秒の花火と同時に、孫文紀念館では無料の野外ライブ。MRTは終夜運転、場所取りは2時間前から。",
+      "kr": "아시아에서 두 번째로 많이 시청되는 카운트다운. 101 타워를 따라 360초간 이어지는 불꽃놀이와 동시에, 국부기념관 앞에서는 무료 야외 콘서트. MRT는 밤새 운행하며, 관람 장소는 2시간 전 자리잡기 권장."
+    },
+    "destinations": [
+      "11",
+      "23",
+      "28"
+    ]
+  }
+]

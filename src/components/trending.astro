@@ -1,0 +1,560 @@
+---
+import fetchedData from '../data/trending_fetched.json';
+
+type Copy = {
+  kicker: string;
+  title: string;
+  subtitle: string;
+  updatedLabel: string;
+  redditTitle: string;
+  redditBrowse: string;
+  youtubeTitle: string;
+  youtubeOpen: string;
+  hashtagTitle: string;
+  instagramPlatform: string;
+  tiktokPlatform: string;
+  trendsTitle: string;
+  trendsOpen: string;
+  sourcesTitle: string;
+  sourceNote: string;
+  upvotesLabel: string;
+  commentsLabel: string;
+  daysAgoLabel: string;
+  viewsLabel: string;
+  subredditLabel: string;
+  noDataLabel: string;
+};
+
+type StaticYT    = { query: string; theme: string; url: string };
+type StaticTag   = { label: string; theme: string; url: string };
+type StaticSub   = { label: string; theme: string; url: string };
+type StaticTrend = { query: string; theme: string; url: string };
+type Source      = { label: string; url: string };
+
+type FetchedVideo = {
+  title: string; channelTitle: string; url: string;
+  views: number; viewsFormatted: string;
+  publishedAt: string; query: string; theme: string;
+};
+type FetchedPost = {
+  title: string; url: string; subreddit: string;
+  upvotes: number; comments: number; daysAgo: number; flair: string | null;
+};
+
+interface Props {
+  lang: string;
+  copy: Copy;
+  updated: string;
+  youtube: StaticYT[];
+  instagram: StaticTag[];
+  tiktok: StaticTag[];
+  reddit: StaticSub[];
+  googleTrends: StaticTrend[];
+  sources: Source[];
+}
+
+const { lang, copy, updated, youtube, instagram, tiktok, reddit, googleTrends, sources } = Astro.props;
+
+// Fetched data — use if available, fall back to static
+const liveReddit: FetchedPost[]  = (fetchedData as any).reddit ?? [];
+const liveYT: FetchedVideo[]     = ((fetchedData as any).youtube?.[lang] ?? []);
+const fetchedAt: string | null   = (fetchedData as any).fetchedAt ?? null;
+
+const displayDate = fetchedAt
+  ? new Date(fetchedAt).toLocaleDateString('en-CA') // YYYY-MM-DD
+  : updated;
+
+const hasLiveReddit = liveReddit.length > 0;
+const hasLiveYT     = liveYT.length > 0;
+
+// Personalised hashtag panel data is handled client-side (see <script> below)
+---
+
+<main class="tr-page">
+
+  <!-- ── Hero ── -->
+  <section class="tr-hero">
+    <div class="tr-hero-inner">
+      <div class="tr-kicker">
+        <span class="material-symbols-outlined">local_fire_department</span>
+        {copy.kicker}
+      </div>
+      <h1>{copy.title}</h1>
+      <p class="tr-subtitle">{copy.subtitle}</p>
+      <div class="tr-updated">
+        <span class="material-symbols-outlined">update</span>
+        {copy.updatedLabel} {displayDate}
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Personalised hashtag panel (client-side) ── -->
+  <section class="tr-pref-panel" id="prefHashtags" style="display:none">
+    <div class="tr-pref-inner">
+      <div class="tr-pref-header">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        <span id="prefHtLabel">Picked for your interests</span>
+      </div>
+      <div id="prefHtGrid" class="tr-pref-grid"></div>
+    </div>
+  </section>
+
+  <div class="tr-body">
+
+    <!-- ── Reddit ── -->
+    <section class="tr-section">
+      <div class="tr-section-head">
+        <div class="tr-platform-pill tr-pill-reddit">
+          <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="10" cy="10" r="10"/><path fill="#fff" d="M16.67 10a1.46 1.46 0 0 0-2.47-1 7.12 7.12 0 0 0-3.85-1.23l.65-3.08 2.13.45a1 1 0 1 0 .1-.49l-2.38-.5a.25.25 0 0 0-.29.19l-.73 3.44a7.14 7.14 0 0 0-3.89 1.23 1.46 1.46 0 1 0-1.61 2.39 2.87 2.87 0 0 0 0 .44c0 2.24 2.61 4.06 5.83 4.06s5.83-1.82 5.83-4.06a2.87 2.87 0 0 0 0-.44 1.46 1.46 0 0 0 .68-1.4zM7.27 11a1 1 0 1 1 1 1 1 1 0 0 1-1-1zm5.58 2.65a3.56 3.56 0 0 1-2.85.6 3.56 3.56 0 0 1-2.85-.6.19.19 0 0 1 .27-.27 3.2 3.2 0 0 0 2.58.47 3.2 3.2 0 0 0 2.58-.47.19.19 0 0 1 .27.27zm-.17-1.65a1 1 0 1 1 1-1 1 1 0 0 1-1 1z"/></svg>
+          Reddit
+        </div>
+        <h2>{copy.redditTitle}</h2>
+      </div>
+
+      {hasLiveReddit ? (
+        <div class="tr-reddit-grid">
+          {liveReddit.map((post) => (
+            <a href={post.url} target="_blank" rel="noopener" class="tr-reddit-card">
+              <div class="tr-reddit-meta">
+                <span class="tr-subreddit-pill">r/{post.subreddit}</span>
+                {post.flair && <span class="tr-flair">{post.flair}</span>}
+                <span class="tr-days-ago">{post.daysAgo}{copy.daysAgoLabel}</span>
+              </div>
+              <p class="tr-reddit-title">{post.title}</p>
+              <div class="tr-reddit-stats">
+                <span>↑ {post.upvotes.toLocaleString()} {copy.upvotesLabel}</span>
+                <span>💬 {post.comments} {copy.commentsLabel}</span>
+                <span class="tr-open-link">{copy.redditBrowse} →</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="tr-static-list">
+          {reddit.map((sub) => (
+            <a href={sub.url} target="_blank" rel="noopener" class="tr-static-row">
+              <span class="tr-theme-tag">{sub.theme}</span>
+              <span class="tr-static-label">{sub.label}</span>
+              <span class="tr-open-arrow">→</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- ── YouTube ── -->
+    <section class="tr-section">
+      <div class="tr-section-head">
+        <div class="tr-platform-pill tr-pill-yt">
+          <span class="material-symbols-outlined" style="font-size:14px">play_circle</span>
+          YouTube
+        </div>
+        <h2>{copy.youtubeTitle}</h2>
+      </div>
+
+      {hasLiveYT ? (
+        <div class="tr-yt-grid">
+          {liveYT.map((video) => (
+            <a href={video.url} target="_blank" rel="noopener" class="tr-yt-card">
+              <div class="tr-yt-card-top">
+                <span class="tr-theme-tag">{video.theme}</span>
+                {video.views > 0 && (
+                  <span class="tr-views">{video.viewsFormatted} {copy.viewsLabel}</span>
+                )}
+              </div>
+              <p class="tr-yt-title">{video.title}</p>
+              <div class="tr-yt-meta">
+                <span class="tr-channel">{video.channelTitle}</span>
+                <span class="tr-open-link">{copy.youtubeOpen} →</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="tr-yt-grid">
+          {youtube.map((video) => (
+            <a href={video.url} target="_blank" rel="noopener" class="tr-yt-card tr-yt-card--static">
+              <div class="tr-yt-card-top">
+                <span class="tr-theme-tag">{video.theme}</span>
+              </div>
+              <p class="tr-yt-title">{video.query}</p>
+              <span class="tr-open-link">{copy.youtubeOpen} →</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- ── Hashtags: Instagram + TikTok ── -->
+    <section class="tr-section">
+      <div class="tr-section-head">
+        <h2>{copy.hashtagTitle}</h2>
+      </div>
+      <div class="tr-hashtag-cols">
+        <div class="tr-hashtag-col">
+          <div class="tr-platform-pill tr-pill-insta">
+            <span>📸</span> {copy.instagramPlatform}
+          </div>
+          <div class="tr-chips">
+            {instagram.map((tag) => (
+              <a href={tag.url} target="_blank" rel="noopener" class="tr-chip tr-chip--insta">
+                {tag.label}
+              </a>
+            ))}
+          </div>
+        </div>
+        <div class="tr-hashtag-col">
+          <div class="tr-platform-pill tr-pill-tiktok">
+            <span>🎵</span> {copy.tiktokPlatform}
+          </div>
+          <div class="tr-chips">
+            {tiktok.map((tag) => (
+              <a href={tag.url} target="_blank" rel="noopener" class="tr-chip tr-chip--tiktok">
+                {tag.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Google Trends ── -->
+    <section class="tr-section">
+      <div class="tr-section-head">
+        <div class="tr-platform-pill tr-pill-trends">
+          <span class="material-symbols-outlined" style="font-size:14px">trending_up</span>
+          Google Trends
+        </div>
+        <h2>{copy.trendsTitle}</h2>
+      </div>
+      <div class="tr-trends-list">
+        {googleTrends.map((trend, i) => (
+          <a href={trend.url} target="_blank" rel="noopener" class="tr-trend-row">
+            <span class="tr-trend-num">{String(i + 1).padStart(2, '0')}</span>
+            <span class="tr-trend-query">{trend.query}</span>
+            <span class="tr-trend-theme">{trend.theme}</span>
+            <span class="material-symbols-outlined tr-trend-arrow">open_in_new</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- ── Sources ── -->
+    <footer class="tr-sources">
+      <h3>{copy.sourcesTitle}</h3>
+      <p>{copy.sourceNote}</p>
+      <div class="tr-source-links">
+        {sources.map((s) => (
+          <a href={s.url} target="_blank" rel="noopener">
+            {s.label}
+            <span class="material-symbols-outlined">open_in_new</span>
+          </a>
+        ))}
+      </div>
+    </footer>
+
+  </div>
+</main>
+
+<!-- ── Personalised panel (reads localStorage) ── -->
+<script is:inline>
+(function () {
+  const HASHTAGS = {
+    food:     { en:[{label:'#taipeifood',url:'https://www.instagram.com/explore/tags/taipeifood/',platform:'Instagram'},{label:'#taipeifood',url:'https://www.tiktok.com/tag/taipeifood',platform:'TikTok'},{label:'#taipeinightmarket',url:'https://www.instagram.com/explore/tags/taipeinightmarket/',platform:'Instagram'},{label:'taipei night market',url:'https://trends.google.com/trends/explore?q=taipei+night+market',platform:'Google Trends'},{label:'taipei food vlog',url:'https://www.youtube.com/results?search_query=taipei+food+vlog&sp=CAM%253D',platform:'YouTube'}],zh:[{label:'#台北美食',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E7%BE%8E%E9%A3%9F/',platform:'Instagram'},{label:'#台北美食',url:'https://www.tiktok.com/tag/%E5%8F%B0%E5%8C%97%E7%BE%8E%E9%A3%9F',platform:'TikTok'},{label:'#台北夜市',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E5%A4%9C%E5%B8%82/',platform:'Instagram'},{label:'台北美食',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E7%BE%8E%E9%A3%9F&geo=TW',platform:'Google Trends'},{label:'台北美食推薦',url:'https://www.youtube.com/results?search_query=%E5%8F%B0%E5%8C%97%E7%BE%8E%E9%A3%9F%E6%8E%A8%E8%96%A6&sp=CAM%253D',platform:'YouTube'}],jp:[{label:'#台北グルメ',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E3%82%B0%E3%83%AB%E3%83%A1/',platform:'Instagram'},{label:'#台北グルメ',url:'https://www.tiktok.com/tag/%E5%8F%B0%E5%8C%97%E3%82%B0%E3%83%AB%E3%83%A1',platform:'TikTok'},{label:'台北グルメ',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E3%82%B0%E3%83%AB%E3%83%A1&geo=JP',platform:'Google Trends'},{label:'台北 グルメ',url:'https://www.youtube.com/results?search_query=%E5%8F%B0%E5%8C%97+%E3%82%B0%E3%83%AB%E3%83%A1&sp=CAM%253D',platform:'YouTube'}],kr:[{label:'#타이베이맛집',url:'https://www.instagram.com/explore/tags/%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4%EB%A7%9B%EC%A7%91/',platform:'Instagram'},{label:'#타이베이맛집',url:'https://www.tiktok.com/tag/%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4%EB%A7%9B%EC%A7%91',platform:'TikTok'},{label:'타이베이 맛집',url:'https://trends.google.com/trends/explore?q=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%EB%A7%9B%EC%A7%91&geo=KR',platform:'Google Trends'},{label:'타이베이 맛집 vlog',url:'https://www.youtube.com/results?search_query=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%EB%A7%9B%EC%A7%91&sp=CAM%253D',platform:'YouTube'}]},
+    culture:  { en:[{label:'#taipeimuseum',url:'https://www.instagram.com/explore/tags/taipeimuseum/',platform:'Instagram'},{label:'#taipeiart',url:'https://www.instagram.com/explore/tags/taipeiart/',platform:'Instagram'},{label:'taipei temple',url:'https://trends.google.com/trends/explore?q=taipei+temple',platform:'Google Trends'},{label:'taipei culture',url:'https://www.youtube.com/results?search_query=taipei+culture+history&sp=CAM%253D',platform:'YouTube'}],zh:[{label:'#台北博物館',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E5%8D%9A%E7%89%A9%E9%A4%A8/',platform:'Instagram'},{label:'#台北廟宇',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E5%BB%9F%E5%AE%87/',platform:'Instagram'},{label:'台北景點',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E6%99%AF%E9%BB%9E&geo=TW',platform:'Google Trends'}],jp:[{label:'#台北観光',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E8%A6%B3%E5%85%89/',platform:'Instagram'},{label:'台北観光',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E8%A6%B3%E5%85%89&geo=JP',platform:'Google Trends'}],kr:[{label:'#타이베이관광',url:'https://www.instagram.com/explore/tags/%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4%EA%B4%80%EA%B4%91/',platform:'Instagram'},{label:'타이베이 관광',url:'https://trends.google.com/trends/explore?q=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%EA%B4%80%EA%B4%91&geo=KR',platform:'Google Trends'}]},
+    nature:   { en:[{label:'#yangmingshan',url:'https://www.instagram.com/explore/tags/yangmingshan/',platform:'Instagram'},{label:'#taipeihike',url:'https://www.instagram.com/explore/tags/taipeihike/',platform:'Instagram'},{label:'taipei hiking',url:'https://trends.google.com/trends/explore?q=taipei+hiking',platform:'Google Trends'}],zh:[{label:'#陽明山',url:'https://www.instagram.com/explore/tags/%E9%99%BD%E6%98%8E%E5%B1%B1/',platform:'Instagram'},{label:'台北登山',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E7%99%BB%E5%B1%B1&geo=TW',platform:'Google Trends'}],jp:[{label:'#陽明山',url:'https://www.instagram.com/explore/tags/%E9%99%BD%E6%98%8E%E5%B1%B1/',platform:'Instagram'},{label:'台北ハイキング',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97+%E3%83%8F%E3%82%A4%E3%82%AD%E3%83%B3%E3%82%B0&geo=JP',platform:'Google Trends'}],kr:[{label:'#양명산',url:'https://www.instagram.com/explore/tags/%EC%96%91%EB%AA%85%EC%82%B0/',platform:'Instagram'},{label:'타이베이 하이킹',url:'https://trends.google.com/trends/explore?q=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%ED%95%98%EC%9D%B4%ED%82%B9&geo=KR',platform:'Google Trends'}]},
+    shopping: { en:[{label:'#taipeishopping',url:'https://www.instagram.com/explore/tags/taipeishopping/',platform:'Instagram'},{label:'#ximending',url:'https://www.instagram.com/explore/tags/ximending/',platform:'Instagram'},{label:'taipei shopping',url:'https://trends.google.com/trends/explore?q=taipei+shopping',platform:'Google Trends'}],zh:[{label:'#台北購物',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E8%B3%BC%E7%89%A9/',platform:'Instagram'},{label:'台北購物',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E8%B3%BC%E7%89%A9&geo=TW',platform:'Google Trends'}],jp:[{label:'#台北ショッピング',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E3%82%B7%E3%83%A7%E3%83%83%E3%83%94%E3%83%B3%E3%82%B0/',platform:'Instagram'},{label:'台北ショッピング',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97+%E3%82%B7%E3%83%A7%E3%83%83%E3%83%94%E3%83%B3%E3%82%B0&geo=JP',platform:'Google Trends'}],kr:[{label:'#타이베이쇼핑',url:'https://www.instagram.com/explore/tags/%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4%EC%87%BC%ED%95%91/',platform:'Instagram'},{label:'타이베이 쇼핑',url:'https://trends.google.com/trends/explore?q=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%EC%87%BC%ED%95%91&geo=KR',platform:'Google Trends'}]},
+    relax:    { en:[{label:'#taipeihotspring',url:'https://www.instagram.com/explore/tags/taipeihotspring/',platform:'Instagram'},{label:'taipei hot spring',url:'https://trends.google.com/trends/explore?q=taipei+hot+spring',platform:'Google Trends'},{label:'beitou hot spring',url:'https://www.youtube.com/results?search_query=beitou+hot+spring&sp=CAM%253D',platform:'YouTube'}],zh:[{label:'#北投溫泉',url:'https://www.instagram.com/explore/tags/%E5%8C%97%E6%8A%95%E6%BA%AB%E6%B3%89/',platform:'Instagram'},{label:'台北溫泉',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E6%BA%AB%E6%B3%89&geo=TW',platform:'Google Trends'}],jp:[{label:'#北投温泉',url:'https://www.instagram.com/explore/tags/%E5%8C%97%E6%8A%95%E6%B8%A9%E6%B3%89/',platform:'Instagram'},{label:'台北 温泉',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97+%E6%B8%A9%E6%B3%89&geo=JP',platform:'Google Trends'}],kr:[{label:'#베이터우온천',url:'https://www.instagram.com/explore/tags/%EB%B2%A0%EC%9D%B4%ED%84%B0%EC%9A%B0%EC%98%A8%EC%B2%9C/',platform:'Instagram'},{label:'타이베이 온천',url:'https://trends.google.com/trends/explore?q=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%EC%98%A8%EC%B2%9C&geo=KR',platform:'Google Trends'}]},
+    night:    { en:[{label:'#taipeinight',url:'https://www.instagram.com/explore/tags/taipeinight/',platform:'Instagram'},{label:'#taipeinightlife',url:'https://www.instagram.com/explore/tags/taipeinightlife/',platform:'Instagram'},{label:'taipei nightlife',url:'https://trends.google.com/trends/explore?q=taipei+nightlife',platform:'Google Trends'}],zh:[{label:'#台北夜景',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E5%A4%9C%E6%99%AF/',platform:'Instagram'},{label:'台北夜景',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97%E5%A4%9C%E6%99%AF&geo=TW',platform:'Google Trends'}],jp:[{label:'#台北夜景',url:'https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E5%A4%9C%E6%99%AF/',platform:'Instagram'},{label:'台北 夜景',url:'https://trends.google.com/trends/explore?q=%E5%8F%B0%E5%8C%97+%E5%A4%9C%E6%99%AF&geo=JP',platform:'Google Trends'}],kr:[{label:'#타이베이야경',url:'https://www.instagram.com/explore/tags/%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4%EC%95%BC%EA%B2%BD/',platform:'Instagram'},{label:'타이베이 야경',url:'https://trends.google.com/trends/explore?q=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%EC%95%BC%EA%B2%BD&geo=KR',platform:'Google Trends'}]},
+  };
+  const PLATFORM_ICONS = { Instagram:'📸', TikTok:'🎵', 'Google Trends':'📈', YouTube:'▶️' };
+  const INTEREST_LABELS = {
+    food:    {en:'Food & drink',zh:'美食',jp:'グルメ',kr:'맛집'},
+    culture: {en:'Culture',zh:'文化',jp:'文化・観光',kr:'문화'},
+    nature:  {en:'Nature',zh:'自然',jp:'自然',kr:'자연'},
+    shopping:{en:'Shopping',zh:'購物',jp:'ショッピング',kr:'쇼핑'},
+    relax:   {en:'Relax',zh:'放鬆',jp:'リラックス',kr:'힐링'},
+    night:   {en:'Night scene',zh:'夜生活',jp:'夜遊び',kr:'야경'},
+  };
+  const PANEL_LABELS = {en:'Picked for your interests',zh:'根據你的偏好推薦',jp:'あなたの好みに合わせて',kr:'취향에 맞게 선택됨'};
+
+  const htmlLang = document.documentElement.lang;
+  const lang = htmlLang==='zh-TW'?'zh':htmlLang==='ja'?'jp':htmlLang==='ko'?'kr':'en';
+  let prefs;
+  try { prefs = JSON.parse(localStorage.getItem('ytp_prefs')||'null'); } catch {}
+  if (!prefs||!prefs.interests||!prefs.interests.length) return;
+
+  const panel = document.getElementById('prefHashtags');
+  const grid  = document.getElementById('prefHtGrid');
+  const label = document.getElementById('prefHtLabel');
+  if (!panel||!grid||!label) return;
+  label.textContent = PANEL_LABELS[lang]||PANEL_LABELS.en;
+
+  let html = '';
+  for (const interest of prefs.interests) {
+    const bucket = HASHTAGS[interest]?.[lang]||HASHTAGS[interest]?.en||[];
+    if (!bucket.length) continue;
+    const iLabel = INTEREST_LABELS[interest]?.[lang]||interest;
+    html += `<div class="tr-pref-section"><div class="tr-pref-section-title">${iLabel}</div><div class="tr-pref-chips">`;
+    for (const t of bucket) {
+      const icon = PLATFORM_ICONS[t.platform]||'🔗';
+      html += `<a href="${t.url}" target="_blank" rel="noopener" class="tr-pref-chip tr-pref-chip--${t.platform.toLowerCase().replace(/\s/g,'-')}"><span>${icon}</span><span>${t.label}</span><span class="tr-pref-plat">${t.platform}</span></a>`;
+    }
+    html += '</div></div>';
+  }
+  grid.innerHTML = html;
+  panel.style.display = '';
+})();
+</script>
+
+<style is:global>
+  /* ── Page shell ── */
+  .tr-page { min-height: 100vh; background: #f7f3e8; color: #1a1a2e; }
+
+  /* ── Hero ── */
+  .tr-hero {
+    padding: 130px 2rem 3.5rem;
+    background: linear-gradient(135deg, #0d2b31 0%, #1a5c52 55%, #9e3120 100%);
+    color: #fff;
+  }
+  .tr-hero-inner { max-width: 900px; margin: 0 auto; }
+  .tr-kicker {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 999px; padding: 0.3rem 0.75rem;
+    font-size: 0.68rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
+    margin-bottom: 1.1rem;
+  }
+  .tr-kicker .material-symbols-outlined { font-size: 15px; color: #ffd580; }
+  .tr-hero h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    line-height: 1.1; margin: 0 0 0.8rem;
+  }
+  .tr-subtitle { font-size: 1rem; line-height: 1.7; opacity: 0.88; max-width: 640px; }
+  .tr-updated {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    margin-top: 1.25rem;
+    background: rgba(255,255,255,0.1); border-radius: 999px;
+    padding: 0.3rem 0.7rem; font-size: 0.78rem; font-weight: 700; opacity: 0.9;
+  }
+  .tr-updated .material-symbols-outlined { font-size: 14px; }
+
+  /* ── Personalised panel ── */
+  .tr-pref-panel {
+    background: linear-gradient(135deg, rgba(192,57,43,0.04), rgba(30,107,82,0.05));
+    border-bottom: 1px solid rgba(192,57,43,0.1);
+    padding: 1.75rem 2rem;
+  }
+  .tr-pref-inner { max-width: 900px; margin: 0 auto; }
+  .tr-pref-header {
+    display: flex; align-items: center; gap: 0.45rem;
+    font-size: 0.7rem; font-weight: 900; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--vermillion, #c0392b);
+    margin-bottom: 1rem;
+  }
+  .tr-pref-header .material-symbols-outlined { font-size: 15px; }
+  .tr-pref-grid { display: flex; flex-direction: column; gap: 1rem; }
+  .tr-pref-section-title {
+    font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #888; margin-bottom: 0.5rem;
+  }
+  .tr-pref-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tr-pref-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.28rem 0.6rem; border-radius: 999px;
+    font-size: 0.78rem; font-weight: 600; text-decoration: none;
+    background: rgba(255,255,255,0.9); border: 1px solid rgba(26,26,46,0.1);
+    color: #1a1a2e; transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .tr-pref-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+  .tr-pref-chip--instagram { border-color: rgba(193,53,132,0.3); background: rgba(193,53,132,0.05); }
+  .tr-pref-chip--tiktok { border-color: rgba(0,0,0,0.12); background: rgba(0,0,0,0.03); }
+  .tr-pref-chip--google-trends { border-color: rgba(66,133,244,0.3); background: rgba(66,133,244,0.05); }
+  .tr-pref-chip--youtube { border-color: rgba(255,0,0,0.22); background: rgba(255,0,0,0.04); }
+  .tr-pref-plat { font-size: 0.62rem; color: #888; }
+
+  /* ── Body ── */
+  .tr-body { max-width: 900px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+  /* ── Section ── */
+  .tr-section { margin-bottom: 3rem; }
+  .tr-section-head {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 1.1rem;
+  }
+  .tr-section-head h2 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: clamp(1.25rem, 2.5vw, 1.7rem);
+    line-height: 1.2; margin: 0;
+    color: #1a1a2e;
+  }
+
+  /* ── Platform pills ── */
+  .tr-platform-pill {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.22rem 0.6rem; border-radius: 4px;
+    font-size: 0.65rem; font-weight: 900; letter-spacing: 0.06em;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .tr-pill-reddit  { background: #ff4500; color: #fff; }
+  .tr-pill-yt      { background: #ff0000; color: #fff; }
+  .tr-pill-insta   { background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045); color: #fff; }
+  .tr-pill-tiktok  { background: #010101; color: #fff; }
+  .tr-pill-trends  { background: #4285f4; color: #fff; }
+
+  /* ── Reddit cards ── */
+  .tr-reddit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  .tr-reddit-card {
+    display: flex; flex-direction: column; gap: 0.6rem;
+    background: #fff; border: 1px solid rgba(255,69,0,0.14);
+    border-left: 3px solid #ff4500;
+    border-radius: 8px; padding: 0.9rem 1rem;
+    text-decoration: none; color: #1a1a2e;
+    transition: box-shadow 0.15s, transform 0.12s;
+  }
+  .tr-reddit-card:hover { box-shadow: 0 4px 16px rgba(255,69,0,0.12); transform: translateY(-1px); }
+  .tr-reddit-meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .tr-subreddit-pill {
+    background: rgba(255,69,0,0.1); color: #cc3700;
+    border-radius: 3px; padding: 0.1rem 0.4rem;
+    font-size: 0.68rem; font-weight: 800;
+  }
+  .tr-flair {
+    background: rgba(26,26,46,0.07); color: #555;
+    border-radius: 3px; padding: 0.1rem 0.4rem;
+    font-size: 0.65rem; font-weight: 600;
+  }
+  .tr-days-ago { font-size: 0.65rem; color: #888; margin-left: auto; }
+  .tr-reddit-title {
+    font-size: 0.9rem; font-weight: 700; line-height: 1.4;
+    color: #1a1a2e; margin: 0; flex: 1;
+  }
+  .tr-reddit-stats {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 0.72rem; color: #666; margin-top: auto;
+  }
+  .tr-open-link { margin-left: auto; color: #c0392b; font-weight: 800; font-size: 0.72rem; }
+
+  /* ── Static fallback list (Reddit subreddits) ── */
+  .tr-static-list { display: flex; flex-direction: column; gap: 0.4rem; }
+  .tr-static-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: #fff; border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 6px; padding: 0.7rem 1rem;
+    text-decoration: none; color: #1a1a2e;
+    transition: border-color 0.12s;
+  }
+  .tr-static-row:hover { border-color: rgba(192,57,43,0.3); }
+  .tr-static-label { font-size: 0.88rem; font-weight: 700; flex: 1; }
+  .tr-open-arrow { color: #888; font-size: 0.85rem; }
+
+  /* ── YouTube grid ── */
+  .tr-yt-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+  .tr-yt-card {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    background: #fff; border: 1px solid rgba(255,0,0,0.1);
+    border-top: 3px solid #ff0000;
+    border-radius: 8px; padding: 0.9rem 1rem;
+    text-decoration: none; color: #1a1a2e;
+    transition: box-shadow 0.15s, transform 0.12s;
+  }
+  .tr-yt-card:hover { box-shadow: 0 4px 16px rgba(255,0,0,0.1); transform: translateY(-1px); }
+  .tr-yt-card--static { border-top-color: rgba(255,0,0,0.4); }
+  .tr-yt-card-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .tr-views { font-size: 0.65rem; color: #888; font-weight: 700; white-space: nowrap; }
+  .tr-yt-title { font-size: 0.88rem; font-weight: 700; line-height: 1.4; color: #1a1a2e; margin: 0; flex: 1; }
+  .tr-yt-meta { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+  .tr-channel { font-size: 0.65rem; color: #888; }
+
+  /* ── Theme tag ── */
+  .tr-theme-tag {
+    display: inline-block;
+    background: rgba(192,57,43,0.1); color: #c0392b;
+    border-radius: 3px; padding: 0.1rem 0.45rem;
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+    text-transform: uppercase; white-space: nowrap;
+  }
+
+  /* ── Hashtag columns ── */
+  .tr-hashtag-cols {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  }
+  .tr-hashtag-col { display: flex; flex-direction: column; gap: 0.75rem; }
+  .tr-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .tr-chip {
+    display: inline-block;
+    padding: 0.3rem 0.65rem; border-radius: 999px;
+    font-size: 0.8rem; font-weight: 700; text-decoration: none;
+    border: 1.5px solid transparent;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .tr-chip:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+  .tr-chip--insta {
+    background: rgba(193,53,132,0.06); color: #b5316c;
+    border-color: rgba(193,53,132,0.25);
+  }
+  .tr-chip--tiktok {
+    background: rgba(0,0,0,0.04); color: #1a1a2e;
+    border-color: rgba(0,0,0,0.12);
+  }
+
+  /* ── Google Trends list ── */
+  .tr-trends-list { display: flex; flex-direction: column; gap: 0.35rem; }
+  .tr-trend-row {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: #fff; border: 1px solid rgba(66,133,244,0.12);
+    border-radius: 6px; padding: 0.65rem 1rem;
+    text-decoration: none; color: #1a1a2e;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .tr-trend-row:hover { border-color: rgba(66,133,244,0.4); background: rgba(66,133,244,0.03); }
+  .tr-trend-num { font-size: 0.75rem; font-weight: 900; color: #aaa; min-width: 1.5rem; }
+  .tr-trend-query { font-size: 0.9rem; font-weight: 700; flex: 1; }
+  .tr-trend-theme {
+    font-size: 0.65rem; font-weight: 700; color: #4285f4;
+    background: rgba(66,133,244,0.08); border-radius: 3px;
+    padding: 0.1rem 0.4rem;
+  }
+  .tr-trend-arrow { font-size: 15px; color: #aaa; }
+
+  /* ── Sources footer ── */
+  .tr-sources {
+    margin-top: 3rem; padding: 1.25rem 1.5rem;
+    background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px;
+  }
+  .tr-sources h3 {
+    font-size: 0.75rem; font-weight: 900; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #888; margin-bottom: 0.4rem;
+  }
+  .tr-sources p { font-size: 0.82rem; color: #666; line-height: 1.6; margin-bottom: 0.75rem; }
+  .tr-source-links { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+  .tr-source-links a {
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    background: #f0f7f2; color: #1a5c52; border-radius: 999px;
+    padding: 0.3rem 0.65rem; font-size: 0.75rem; font-weight: 700;
+    text-decoration: none; transition: background 0.12s;
+  }
+  .tr-source-links a:hover { background: #dceee8; }
+  .tr-source-links .material-symbols-outlined { font-size: 13px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .tr-body { padding: 2rem 1.25rem 4rem; }
+    .tr-reddit-grid { grid-template-columns: 1fr; }
+    .tr-yt-grid { grid-template-columns: 1fr 1fr; }
+    .tr-hashtag-cols { grid-template-columns: 1fr; gap: 1.25rem; }
+  }
+  @media (max-width: 480px) {
+    .tr-hero { padding: 110px 1.25rem 2.5rem; }
+    .tr-yt-grid { grid-template-columns: 1fr; }
+  }
+</style>

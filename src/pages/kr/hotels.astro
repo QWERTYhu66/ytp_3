@@ -1,0 +1,55 @@
+---
+import HotelBrowser from '../../components/hotels.astro';
+import Layout from '../../layouts/Layout.astro';
+
+const copy = {
+  kicker: '타이베이 숙소 찾기',
+  h1: '타이베이 여행에 맞는 숙소 거점을 찾아보세요.',
+  body: '공식 등록된 타이베이 호텔을 지역, MRT 접근성, 객실 수, 1박 가격대로 둘러볼 수 있습니다. 특정 예약명을 확인하려면 호텔 확인 도구를 사용하세요.',
+  check: '호텔 확인',
+  browse: '숙소 둘러보기',
+  registeredHotels: '공식 등록 호텔',
+  districtsCovered: '포함 지역',
+  roomsListed: '등록 객실 수',
+  sectionLabel: '호텔 둘러보기',
+  sectionTitle: '가고 싶은 장소 근처에서 시작하세요.',
+  searchPlaceholder: '호텔, 지역, MRT 검색...',
+  searchAria: '호텔 검색',
+  filterAria: '지역별 필터',
+  all: '전체',
+  showing: '표시 중',
+  featuredHotels: '개의 호텔',
+  featuredHotel: '개의 호텔',
+  registered: '등록됨',
+  mrtVaries: 'MRT 정보 없음',
+  rooms: '객실',
+  viewDetails: '자세히 보기',
+  from: '최저',
+  priceVaries: '가격 변동',
+  mapAria: '타이베이 호텔 개요',
+  starRated: '성급',
+  officialSource: '공식 관광 데이터',
+  dataPromptTitle: '원본 데이터 언어를 선택할까요?',
+  dataPromptBody: '호텔명, 가격, 성급은 공식 데이터를 사용합니다. 필요하면 중국어 또는 영어 목록으로 전환할 수 있습니다.',
+  dataPromptZh: '중국어',
+  dataPromptEn: '영어',
+  priceFilterLabel: '가격',
+  starFilterLabel: '성급',
+  priceAll: '가격 전체',
+  priceBudget: 'NT$3,000 미만',
+  priceMid: 'NT$3,000-8,000',
+  pricePremium: 'NT$8,000 이상',
+  priceUnknown: '가격 변동',
+  showMore: '더 보기',
+  showLess: '간략히',
+  starAll: '성급 전체',
+  starRatedOnly: '성급 호텔만',
+  starThreePlus: '3성 이상',
+  starFourPlus: '4성 이상',
+  starFivePlus: '5성',
+};
+---
+
+<Layout title="호텔 | 타이베이 나침반">
+  <HotelBrowser copy={copy} basePath="/kr" lang="kr" />
+</Layout>

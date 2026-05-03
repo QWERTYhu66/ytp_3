@@ -1,0 +1,310 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+
+type Restaurant = {
+  suggestion_level: number;
+  name: string;
+  photo: string;
+  district: string;
+  opening_hours: string[];
+  categories: string[];
+  avg_price: number;
+  rating: number;
+  blog_link: string;
+  google_map: string;
+  ifoodie_link?: string;
+  lat?: number | null;
+  lng?: number | null;
+  address?: string;
+  ai_intro?: string;
+  ai_short?: string;
+};
+
+export async function getStaticPaths() {
+  const raw = fs.readFileSync(path.resolve('./public/data/restaurants.json'), 'utf8');
+  const data = JSON.parse(raw) as Restaurant[];
+  return data.map((r, i) => ({
+    params: { id: String(i) },
+    props: { restaurant: r, idx: i },
+  }));
+}
+
+interface Props { restaurant: Restaurant; idx: number }
+const { restaurant, idx } = Astro.props as Props;
+const backHref = Astro.url.searchParams.get('from') === 'ai' ? '/jp/ai' : '/jp/';
+
+const cleanedHours = restaurant.opening_hours?.map((h) => h.replace(/^[\*\s]+/, '')) ?? [];
+
+const priceTier =
+  restaurant.avg_price >= 1500 ? '$$$$' :
+  restaurant.avg_price >= 800 ? '$$$' :
+  restaurant.avg_price >= 400 ? '$$' : '$';
+
+const WEEK_LABELS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+const WEEK_LABELS_JA = ['月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日', '日曜日'];
+const today = (new Date().getDay() + 6) % 7;
+function translateDay(h: string, labels: string[]): string {
+  const idx = WEEK_LABELS.findIndex(label => h.startsWith(label));
+  return idx >= 0 ? labels[idx] + h.slice(WEEK_LABELS[idx].length) : h;
+}
+const translatedHours = cleanedHours.map(h => translateDay(h, WEEK_LABELS_JA));
+const todayRaw = cleanedHours.find((h) => h.startsWith(WEEK_LABELS[today])) ?? cleanedHours[0] ?? '—';
+const todayHours = translateDay(todayRaw, WEEK_LABELS_JA);
+
+const CATEGORY_JP: Record<string, string> = {
+  '義式料理':'イタリアン','午餐':'ランチ','晚餐':'ディナー','約會餐廳':'デートに最適','早餐':'朝食',
+  '早午餐':'ブランチ','下午茶':'アフタヌーンティー','甜點':'デザート','咖啡':'カフェ','精品咖啡':'スペシャルティコーヒー',
+  '居酒屋':'居酒屋','和風洋食':'和洋折衷','日本料理':'日本料理','拉麵':'ラーメン','壽司':'寿司',
+  '燒肉':'焼肉','火鍋':'火鍋','涮涮鍋':'しゃぶしゃぶ','韓式料理':'韓国料理','韓式':'韓国スタイル',
+  '泰式料理':'タイ料理','越式料理':'ベトナム料理','印度料理':'インド料理','法式料理':'フレンチ','美式料理':'アメリカン',
+  '墨西哥料理':'メキシコ料理','西班牙料理':'スペイン料理','港式料理':'広東料理','廣東菜':'広東料理','中式料理':'中国料理',
+  '客家料理':'客家料理','海鮮':'シーフード','牛排':'ステーキ','牛肉麵':'牛肉麺','麵食':'麺料理','餃子':'餃子',
+  '小吃':'屋台料理','宵夜':'深夜営業','景觀餐廳':'景観レストラン','親子餐廳':'ファミリー向け',
+  '寵物友善':'ペット可','吃到飽':'食べ放題','素食':'ベジタリアン','合菜':'宴会料理','熱炒':'炒め料理',
+  '鐵板燒':'鉄板焼','攤販':'屋台','餐盒':'弁当','速食餐廳':'ファストフード','外帶外送店家':'テイクアウト',
+  '烘焙坊':'ベーカリー','蛋糕':'ケーキ','冰品飲料':'アイスドリンク','冰淇淋':'アイスクリーム','刨冰':'かき氷',
+  '果汁吧':'ジュースバー','飲料店':'ドリンクショップ','茶店':'茶屋','啤酒':'ビール','啤酒吧':'ビールバー','酒吧':'バー',
+  '餐酒館':'ビストロ','亞洲融合':'アジアンフュージョン','異國料理':'エスニック','新加坡料理':'シンガポール料理',
+  '馬來西亞料理':'マレーシア料理','披薩':'ピザ','漢堡':'バーガー','咖哩':'カレー','雞料理':'チキン料理',
+  '精緻高級':'高級レストラン','新開幕':'新規オープン','食品專賣店':'専門店','輕食':'軽食',
+  'Buffet':'ビュッフェ','Fine Dining':'ファインダイニング','POKE':'ポキ','TAPAS':'タパス',
+};
+const translateCat = (c: string) => CATEGORY_JP[c] ?? c;
+---
+
+<Layout title={`${restaurant.name} | Taipei Compass`}>
+  <main class="place-page">
+    <div class="place-nav">
+      <a href={backHref} class="back-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        戻る
+      </a>
+    </div>
+
+    <section class="place-hero restaurant-hero">
+      {restaurant.photo && (
+        <img class="hero-bg" src={restaurant.photo} alt={restaurant.name} loading="eager" />
+      )}
+      <div class="hero-scrim"></div>
+      <div class="place-hero-inner">
+        <div class="place-kind">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">restaurant</span>
+          レストラン · {restaurant.district}
+        </div>
+        <h1 class="place-h1">{restaurant.name}</h1>
+        <div class="place-chips">
+          {restaurant.rating > 0 && (
+            <span class="place-chip rating">
+              <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">star</span>
+              {restaurant.rating.toFixed(1)}
+            </span>
+          )}
+          {restaurant.avg_price > 0 && (
+            <span class="place-chip">NT${restaurant.avg_price} · {priceTier}</span>
+          )}
+          {restaurant.categories?.slice(0, 4).map((c) => (
+            <span class="place-chip ghost">{translateCat(c)}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="place-body">
+      <div class="place-grid">
+        <article class="place-about">
+          <h2>今週の営業時間</h2>
+          <div class="hours-today">
+            <span class="material-symbols-outlined">schedule</span>
+            <div>
+              <div class="hours-label">本日</div>
+              <div class="hours-value">{todayHours}</div>
+            </div>
+          </div>
+          <ul class="hours-list">
+            {translatedHours.map((h, i) => (
+              <li class:list={[{ active: i === today }]}>{h}</li>
+            ))}
+          </ul>
+
+          {restaurant.categories?.length > 0 && (
+            <>
+              <h2 style="margin-top:2rem">タグ</h2>
+              <div class="place-chips" style="margin-top:0.5rem">
+                {restaurant.categories.map((c) => (
+                  <span class="place-chip outline">{translateCat(c)}</span>
+                ))}
+              </div>
+            </>
+          )}
+        </article>
+
+        <aside class="place-meta">
+          <div class="meta-card">
+            <div class="meta-row">
+              <span class="material-symbols-outlined">location_on</span>
+              <div>
+                <div class="meta-label">地区</div>
+                <div class="meta-value">{restaurant.district || '—'}</div>
+              </div>
+            </div>
+            {restaurant.rating > 0 && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">star_rate</span>
+                <div>
+                  <div class="meta-label">評価</div>
+                  <div class="meta-value">{restaurant.rating.toFixed(1)} / 5</div>
+                </div>
+              </div>
+            )}
+            {restaurant.avg_price > 0 && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">payments</span>
+                <div>
+                  <div class="meta-label">平均価格</div>
+                  <div class="meta-value">NT${restaurant.avg_price}</div>
+                </div>
+              </div>
+            )}
+            <a class="meta-cta" href={restaurant.google_map} target="_blank" rel="noopener">
+              <span class="material-symbols-outlined">directions</span>
+              Google マップで開く
+            </a>
+            {restaurant.blog_link && (
+              <a class="meta-cta ghost" href={restaurant.blog_link} target="_blank" rel="noopener" style="margin-top:0.5rem">
+                <span class="material-symbols-outlined">menu_book</span>
+                レビューを読む
+              </a>
+            )}
+            {restaurant.ifoodie_link && (
+              <a class="ifoodie-card" href={restaurant.ifoodie_link} target="_blank" rel="noopener">
+                <img class="ifoodie-logo" src="/images/ifoodie-logo.png" alt="iFoodie" width="100" height="100" />
+                <span>愛食記で見る</span>
+              </a>
+            )}
+            <button
+              class="meta-cta trip-toggle"
+              id="add-to-trip"
+              type="button"
+              style="margin-top:0.5rem;background:transparent;border:1.5px solid var(--jade,#1E6B52);color:var(--jade,#1E6B52);cursor:pointer"
+              data-id={String(idx)}
+              data-type="r"
+              data-name={restaurant.name}
+              data-district={restaurant.district}
+              data-image={restaurant.photo || ''}
+              data-lat={String(restaurant.lat ?? '')}
+              data-lng={String(restaurant.lng ?? '')}
+              data-trip-href="/jp/trip"
+            >
+              <span class="material-symbols-outlined" id="trip-icon">bookmark_add</span>
+              <span id="trip-label">旅程に追加</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <meta data-place-id={`r:${idx}`} />
+  </main>
+
+  <style is:global>
+    .place-page { background: var(--parchment, #FDF6E3); min-height: 100vh; padding: 96px 2rem 4rem; color: var(--ink, #1a1a2e); }
+    .place-nav { max-width: 960px; margin: 0 auto 1rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--vermillion, #c0392b); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .back-link .material-symbols-outlined { font-size: 18px; }
+    .place-hero { position: relative; max-width: 960px; margin: 0 auto; border-radius: 16px; overflow: hidden; color: #fff; padding: 3.5rem 2.5rem; min-height: 320px; display: flex; align-items: flex-end; }
+    .restaurant-hero { background: #1a1a2e; }
+    .place-hero .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; z-index: 0; }
+    .place-hero .hero-scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.1) 100%); z-index: 1; }
+    .place-hero-inner { position: relative; z-index: 2; }
+    .place-kind { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 0.5rem; }
+    .place-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; margin: 0.25rem 0 1rem; line-height: 1.1; }
+    .place-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .place-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.22); color: #fff; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.82rem; backdrop-filter: blur(6px); }
+    .place-chip.rating { background: #f59e0b; color: #1a1a2e; font-weight: 700; }
+    .place-chip.ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.3); }
+    .place-chip.outline { background: #fff; color: var(--vermillion, #c0392b); border: 1px solid rgba(192,57,43,0.25); }
+    .place-body { max-width: 960px; margin: 2rem auto 0; }
+    .place-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .place-about h2 { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; margin: 0 0 0.75rem; }
+    .hours-today { display: flex; gap: 0.75rem; background: #fff; border: 1px solid rgba(192,57,43,0.15); border-left: 4px solid var(--vermillion, #c0392b); border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 1rem; }
+    .hours-today .material-symbols-outlined { color: var(--vermillion, #c0392b); }
+    .hours-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary, #666); }
+    .hours-value { font-size: 1rem; margin-top: 0.1rem; font-weight: 500; }
+    .hours-list { list-style: none; padding: 0; margin: 0 0 0.5rem; background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden; }
+    .hours-list li { padding: 0.55rem 1rem; border-bottom: 1px dashed rgba(0,0,0,0.08); font-size: 0.92rem; }
+    .hours-list li:last-child { border-bottom: none; }
+    .hours-list li.active { background: rgba(192,57,43,0.05); font-weight: 600; }
+    .meta-card { background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+    .meta-row { display: flex; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px dashed rgba(0,0,0,0.08); }
+    .meta-row:last-of-type { border-bottom: none; }
+    .meta-row .material-symbols-outlined { color: var(--vermillion, #c0392b); font-size: 20px; margin-top: 0.15rem; }
+    .meta-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary, #666); }
+    .meta-value { font-size: 0.95rem; margin-top: 0.1rem; }
+    .meta-cta { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1rem; background: var(--vermillion, #c0392b); color: #fff; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; width: 100%; justify-content: center; box-sizing: border-box; }
+    .meta-cta.ghost { background: transparent; color: var(--vermillion, #c0392b); border: 1px solid var(--vermillion, #c0392b); }
+    .meta-cta:hover { filter: brightness(1.08); }
+    .meta-cta .material-symbols-outlined { font-size: 18px; }
+    .ifoodie-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-decoration: none; border: 1.5px solid rgba(192,57,43,0.18); border-radius: 12px; padding: 1rem; margin-top: 0.5rem; color: var(--vermillion); font-weight: 600; font-size: 0.9rem; transition: all 0.15s; }
+    .ifoodie-card:hover { background: rgba(192,57,43,0.05); border-color: var(--vermillion); }
+    .ifoodie-logo { width: 100px; height: 100px; border-radius: 20px; object-fit: cover; }
+    .trip-toggle.saved {
+      background: var(--jade, #1E6B52) !important;
+      color: #fff !important;
+      border-color: var(--jade, #1E6B52) !important;
+    }
+    @media (max-width: 768px) {
+      .place-page { padding: 88px 1.25rem 3rem; }
+      .place-hero { padding: 2.5rem 1.5rem; min-height: 260px; }
+      .place-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    }
+  </style>
+
+  <script is:inline>
+  (function () {
+    const KEY = 'ytp_trip';
+    const btn = document.getElementById('add-to-trip');
+    if (!btn) return;
+
+    const { id, type, name, district, image } = btn.dataset;
+
+    function loadTrip() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(KEY) || '[]');
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && Array.isArray(parsed.places)) return parsed.places;
+        return [];
+      } catch {
+        return [];
+      }
+    }
+    function saveTrip(arr) { localStorage.setItem(KEY, JSON.stringify(arr)); }
+    function isSaved() { return loadTrip().some(p => p.type === type && p.id === id); }
+
+    function sync() {
+      const saved = isSaved();
+      btn.classList.toggle('saved', saved);
+      document.getElementById('trip-icon').textContent = saved ? 'bookmark_remove' : 'bookmark_add';
+      document.getElementById('trip-label').textContent = saved ? '旅程に保存済み ✓' : '旅程に追加';
+    }
+
+    btn.addEventListener('click', () => {
+      const trip = loadTrip();
+      if (isSaved()) {
+        saveTrip(trip.filter(p => !(p.type === type && p.id === id)));
+      } else {
+        const lat = btn.dataset.lat ? parseFloat(btn.dataset.lat) : null;
+        const lng = btn.dataset.lng ? parseFloat(btn.dataset.lng) : null;
+        trip.push({ id, type, name, district, lat, lng, image });
+        saveTrip(trip);
+        window.location.href = btn.dataset.tripHref || '/jp/trip';
+      }
+      sync();
+    });
+
+    sync();
+  })();
+  </script>
+</Layout>

@@ -1,0 +1,188 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// All Taipei districts that appear in the datasets, plus a few more.
+const DISTRICTS = [
+  { value: '大安區', label: 'Daan' },
+  { value: '信義區', label: 'Xinyi' },
+  { value: '中山區', label: 'Zhongshan' },
+  { value: '中正區', label: 'Zhongzheng' },
+  { value: '松山區', label: 'Songshan' },
+  { value: '士林區', label: 'Shilin' },
+  { value: '大同區', label: 'Datong' },
+  { value: '萬華區', label: 'Wanhua' },
+  { value: '內湖區', label: 'Neihu' },
+  { value: '北投區', label: 'Beitou' },
+  { value: '文山區', label: 'Wenshan' },
+  { value: '南港區', label: 'Nangang' },
+];
+
+// Interest categories mirror the `category` values used in attractions.json
+// (plus "food" which maps to restaurants.json).
+const INTERESTS = [
+  { id: 'food',     label: 'Food & Drink',  emoji: '🍜' },
+  { id: 'culture',  label: 'Culture',       emoji: '🏛️' },
+  { id: 'nature',   label: 'Nature',        emoji: '🌿' },
+  { id: 'shopping', label: 'Shopping',      emoji: '🛍️' },
+  { id: 'relax',    label: 'Relax & Wellness', emoji: '♨️' },
+  { id: 'night',    label: 'Night Scene',   emoji: '🌙' },
+];
+---
+
+<Layout title="Plan Your Trip | Taipei Compass">
+  <section class="prelog-hero">
+    <div class="prelog-inner">
+      <div class="section-label">Plan Your Journey</div>
+      <h1 class="prelog-h1">Tell us what you like</h1>
+      <p class="prelog-sub">
+        Your answers stay on this device (no account needed) and help the AI assistant recommend places from our Taipei guide that actually match your vibe.
+      </p>
+
+      <form id="prefs-form" class="prefs-form">
+        <fieldset class="prefs-group">
+          <legend>What interests you? (optional)</legend>
+          <div class="chip-grid" data-field="interests">
+            {INTERESTS.map((i) => (
+              <button type="button" class="chip" data-value={i.id}>
+                <span aria-hidden="true">{i.emoji}</span> {i.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset class="prefs-group">
+          <legend>Favourite districts (optional)</legend>
+          <div class="chip-grid" data-field="districts">
+            {DISTRICTS.map((d) => (
+              <button type="button" class="chip" data-value={d.value}>{d.label}</button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset class="prefs-group">
+          <legend>Travel pace</legend>
+          <div class="radio-row" data-field="pace">
+            <button type="button" class="chip" data-value="relaxed">Relaxed</button>
+            <button type="button" class="chip" data-value="balanced">Balanced</button>
+            <button type="button" class="chip" data-value="packed">Packed</button>
+          </div>
+        </fieldset>
+
+        <fieldset class="prefs-group days-group">
+          <legend>How many days?</legend>
+          <input type="number" id="days-input" min="1" max="14" value="3" required />
+        </fieldset>
+
+        <div class="prefs-actions">
+          <button type="submit" class="btn-primary">
+            <span class="material-symbols-outlined">check</span>
+            Save & Start Planning
+          </button>
+          <button type="button" id="prefs-reset" class="btn-ghost">Clear preferences</button>
+        </div>
+      </form>
+
+      <p id="prefs-status" class="prefs-status"></p>
+    </div>
+  </section>
+
+  <style is:global>
+    .prelog-hero { min-height: 100vh; display: flex; align-items: center; padding: 96px 2.5rem 4rem; background: var(--parchment, #FDF6E3); }
+    .prelog-inner { max-width: 760px; margin: 0 auto; width: 100%; }
+    .prelog-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; color: var(--ink, #1a1a2e); margin: 0.5rem 0 1rem; }
+    .prelog-sub { font-size: 1.05rem; color: var(--text-secondary, #555); line-height: 1.7; margin-bottom: 2.5rem; }
+    .prefs-form { display: flex; flex-direction: column; gap: 2rem; }
+    .prefs-group { border: none; padding: 0; margin: 0; }
+    .prefs-group legend { font-weight: 700; font-size: 0.95rem; color: var(--ink, #1a1a2e); margin-bottom: 0.6rem; padding: 0; }
+    .chip-grid, .radio-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .chip {
+      background: #fff; border: 1px solid rgba(192,57,43,0.25); color: var(--ink, #1a1a2e);
+      padding: 0.5rem 0.9rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem;
+      font-family: inherit; transition: all 160ms ease;
+    }
+    .chip:hover { border-color: var(--vermillion, #c0392b); }
+    .chip[aria-pressed="true"], .chip.is-active {
+      background: var(--vermillion, #c0392b); color: #fff; border-color: var(--vermillion, #c0392b);
+    }
+    .days-group input {
+      width: 5rem; padding: 0.5rem 0.75rem; border: 1px solid rgba(192,57,43,0.25);
+      border-radius: 0.5rem; font-size: 1rem; font-family: inherit;
+    }
+    .prefs-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .prefs-status { margin-top: 1rem; font-size: 0.9rem; color: var(--vermillion, #c0392b); min-height: 1.25rem; }
+  </style>
+
+  <script>
+    import { loadPrefs, savePrefs, PREFS_KEY, type Prefs } from '../lib/ai';
+
+    const form = document.getElementById('prefs-form') as HTMLFormElement;
+    const statusEl = document.getElementById('prefs-status')!;
+    const daysInput = document.getElementById('days-input') as HTMLInputElement;
+
+    // --- restore previous selections ---
+    const existing = loadPrefs();
+    if (existing) {
+      if (existing.days) daysInput.value = String(existing.days);
+      for (const btn of form.querySelectorAll<HTMLButtonElement>('.chip')) {
+        const field = btn.closest('[data-field]')?.getAttribute('data-field');
+        const val = btn.getAttribute('data-value');
+        if (!field || !val) continue;
+        if (field === 'interests' && existing.interests.includes(val)) btn.classList.add('is-active');
+        if (field === 'districts' && existing.districts.includes(val)) btn.classList.add('is-active');
+        if (field === 'pace' && existing.pace === val) btn.classList.add('is-active');
+      }
+    }
+
+    // --- toggle behaviour ---
+    form.addEventListener('click', (ev) => {
+      const btn = (ev.target as HTMLElement).closest<HTMLButtonElement>('.chip');
+      if (!btn) return;
+      const field = btn.closest('[data-field]')?.getAttribute('data-field');
+      if (!field) return;
+      if (field === 'pace') {
+        for (const b of form.querySelectorAll<HTMLButtonElement>('[data-field="pace"] .chip')) {
+          b.classList.toggle('is-active', b === btn);
+        }
+      } else {
+        btn.classList.toggle('is-active');
+      }
+    });
+
+    // --- submit ---
+    form.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const pick = (field: string) =>
+        Array.from(form.querySelectorAll<HTMLButtonElement>(`[data-field="${field}"] .chip.is-active`))
+          .map((b) => b.getAttribute('data-value')!)
+          .filter(Boolean);
+      const paceVal = pick('pace')[0] ?? '';
+      if (!paceVal) {
+        statusEl.textContent = 'Please choose a travel pace.';
+        return;
+      }
+      const daysVal = Number(daysInput.value);
+      if (!Number.isFinite(daysVal) || daysVal < 1 || daysVal > 14) {
+        statusEl.textContent = 'Please enter how many days (1-14).';
+        daysInput.focus();
+        return;
+      }
+      const prefs: Prefs = {
+        interests: pick('interests'),
+        districts: pick('districts'),
+        pace: paceVal as Prefs['pace'],
+        days: Math.round(daysVal),
+      };
+      savePrefs(prefs);
+      statusEl.textContent = 'Saved! Taking you to Explore…';
+      setTimeout(() => { window.location.href = '/explore'; }, 600);
+    });
+
+    // --- clear ---
+    document.getElementById('prefs-reset')?.addEventListener('click', () => {
+      localStorage.removeItem(PREFS_KEY);
+      for (const b of form.querySelectorAll<HTMLButtonElement>('.chip')) b.classList.remove('is-active');
+      daysInput.value = '3';
+      statusEl.textContent = 'Preferences cleared.';
+    });
+  </script>
+</Layout>

@@ -1,0 +1,140 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import festivals from '../../data/festivals.json';
+import attractions from '../../../scripts/pages/attractions_en.json';
+
+type Attraction = {
+  id: string;
+  name: string;
+  district: string;
+};
+
+type Festival = {
+  slug: string;
+  months: number[];
+  date: { en: string; zh: string; jp: string; kr: string };
+  emoji: string;
+  color: string;
+  title: { en: string; zh: string; jp: string; kr: string };
+  description: { en: string; zh: string; jp: string; kr: string };
+  destinations: string[];
+};
+
+const fests = festivals as Festival[];
+const atts = attractions as Attraction[];
+const byId = new Map(atts.map((a) => [a.id, a]));
+
+// Group by primary (first) month
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const grouped: Record<number, Festival[]> = {};
+for (const f of fests) {
+  const primary = f.months[0];
+  if (!grouped[primary]) grouped[primary] = [];
+  grouped[primary].push(f);
+}
+const sortedMonths = Object.keys(grouped).map(Number).sort((a, b) => a - b);
+
+const colorMap: Record<string, string> = {
+  vermillion: '#c0392b',
+  jade: '#1e6b52',
+  gold: '#d4a017',
+  amber: '#b87822',
+  coral: '#e26a6a',
+  pink: '#c5337a',
+  ink: '#1a1a2e',
+};
+---
+
+<Layout title="Festivals | Taipei Compass">
+  <main class="fest-index">
+    <section class="fest-index-hero">
+      <div class="fest-index-hero-inner">
+        <div class="section-label">Calendar</div>
+        <h1 class="fest-index-h1">Taipei festivals, month by month</h1>
+        <p class="fest-index-sub">
+          Every festival Taipei celebrates, when to find it, and exactly where in the city to experience it. Time your trip with the right moment — the city feels different every one of them.
+        </p>
+      </div>
+    </section>
+
+    <section class="fest-index-body">
+      {sortedMonths.map((m) => (
+        <section class="fest-month">
+          <div class="fest-month-header">
+            <div class="fest-month-num">{String(m).padStart(2, '0')}</div>
+            <h2 class="fest-month-name">{MONTH_NAMES[m - 1]}</h2>
+          </div>
+          <div class="fest-month-list">
+            {grouped[m].map((f) => {
+              const accent = colorMap[f.color] ?? '#c0392b';
+              const dests = f.destinations
+                .map((id) => byId.get(id))
+                .filter((a): a is Attraction => Boolean(a));
+              return (
+                <a href={`/festivals/${f.slug}`} class="fest-card" style={`--accent: ${accent}`}>
+                  <div class="fest-card-head">
+                    <div class="fest-card-emoji">{f.emoji}</div>
+                    <div class="fest-card-meta">
+                      <h3 class="fest-card-title">{f.title.en}</h3>
+                      <div class="fest-card-date">{f.date.en}</div>
+                    </div>
+                  </div>
+                  <p class="fest-card-desc">{f.description.en}</p>
+                  {dests.length > 0 && (
+                    <div class="fest-card-dests">
+                      <span class="fest-card-dests-label">Where:</span>
+                      {dests.map((d, i) => (
+                        <span class="fest-card-dest">{d.name}{i < dests.length - 1 ? ' · ' : ''}</span>
+                      ))}
+                    </div>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </section>
+  </main>
+
+  <style is:global>
+    .fest-index { background: var(--parchment, #FDF6E3); min-height: 100vh; padding: 96px 2rem 4rem; color: var(--ink, #1a1a2e); }
+
+    .fest-index-hero { max-width: 960px; margin: 0 auto 2.5rem; text-align: center; padding: 2rem 0; }
+    .fest-index-hero .section-label { color: var(--vermillion, #c0392b); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.75rem; }
+    .fest-index-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 900; margin: 0 0 1rem; line-height: 1.15; }
+    .fest-index-sub { font-size: 1.05rem; line-height: 1.75; color: var(--text-secondary, #555); max-width: 640px; margin: 0 auto; }
+
+    .fest-index-body { max-width: 960px; margin: 0 auto; }
+
+    .fest-month { margin-bottom: 3rem; }
+    .fest-month-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.25rem; border-bottom: 2px solid rgba(192,57,43,0.2); padding-bottom: 0.75rem; }
+    .fest-month-num { font-family: 'Noto Serif TC', serif; font-size: 2rem; font-weight: 900; color: var(--vermillion, #c0392b); line-height: 1; }
+    .fest-month-name { font-family: 'Noto Serif TC', serif; font-size: 1.75rem; font-weight: 800; margin: 0; }
+
+    .fest-month-list { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+
+    .fest-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-left: 4px solid var(--accent, #c0392b); border-radius: 10px; padding: 1.5rem; text-decoration: none; color: var(--ink, #1a1a2e); box-shadow: 0 4px 16px rgba(0,0,0,0.04); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .fest-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.08); }
+
+    .fest-card-head { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem; }
+    .fest-card-emoji { font-size: 2.25rem; line-height: 1; }
+    .fest-card-meta { flex: 1; min-width: 0; }
+    .fest-card-title { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; font-weight: 800; margin: 0 0 0.25rem; }
+    .fest-card-date { font-size: 0.85rem; color: var(--text-secondary, #666); font-weight: 500; }
+
+    .fest-card-desc { font-size: 0.95rem; line-height: 1.65; color: var(--text-secondary, #444); margin: 0 0 1rem; }
+
+    .fest-card-dests { font-size: 0.85rem; color: var(--text-secondary, #555); padding-top: 0.75rem; border-top: 1px dashed rgba(0,0,0,0.08); }
+    .fest-card-dests-label { font-weight: 700; color: var(--accent, #c0392b); margin-right: 0.4rem; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.08em; }
+    .fest-card-dest { color: var(--ink, #1a1a2e); }
+
+    @media (max-width: 768px) {
+      .fest-index { padding: 88px 1.25rem 3rem; }
+      .fest-month-num { font-size: 1.5rem; }
+      .fest-month-name { font-size: 1.35rem; }
+      .fest-card { padding: 1.25rem; }
+      .fest-card-title { font-size: 1.15rem; }
+    }
+  </style>
+</Layout>

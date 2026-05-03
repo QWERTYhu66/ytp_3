@@ -1,0 +1,51 @@
+---
+import HotelBrowser from '../../components/hotels.astro';
+import Layout from '../../layouts/Layout.astro';
+
+const copy = {
+  kicker: '台北住宿查找',
+  h1: '找到更適合你的台北住宿據點。',
+  body: '依行政區、捷運便利性、房間數與每晚價格區間瀏覽臺北合法登記旅館。若想確認特定訂房名稱，請使用旅館查詢工具。',
+  check: '查詢旅館',
+  browse: '瀏覽住宿',
+  registeredHotels: '合法登記旅館',
+  districtsCovered: '涵蓋行政區',
+  roomsListed: '收錄房間數',
+  sectionLabel: '瀏覽旅館',
+  sectionTitle: '從你在意的地點附近開始找。',
+  searchPlaceholder: '搜尋旅館、行政區、捷運站...',
+  searchAria: '搜尋旅館',
+  filterAria: '依行政區篩選',
+  all: '全部',
+  showing: '顯示',
+  featuredHotels: '間旅館',
+  featuredHotel: '間旅館',
+  registered: '已登記',
+  mrtVaries: '捷運資訊不一',
+  rooms: '間房',
+  viewDetails: '查看詳情',
+  from: '起',
+  priceVaries: '價格不一',
+  mapAria: '台北旅館總覽',
+  starRated: '星級',
+  officialSource: '官方觀光資料',
+  priceFilterLabel: '價格',
+  starFilterLabel: '星級',
+  priceAll: '不限價格',
+  priceBudget: 'NT$3,000 以下',
+  priceMid: 'NT$3,000-8,000',
+  pricePremium: 'NT$8,000 以上',
+  priceUnknown: '價格不一',
+  showMore: '顯示更多',
+  showLess: '顯示較少',
+  starAll: '不限星級',
+  starRatedOnly: '有星級評等',
+  starThreePlus: '3 星以上',
+  starFourPlus: '4 星以上',
+  starFivePlus: '5 星',
+};
+---
+
+<Layout title="旅館住宿 | 台北指南針">
+  <HotelBrowser copy={copy} basePath="/zh" lang="zh" />
+</Layout>

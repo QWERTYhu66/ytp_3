@@ -1,0 +1,217 @@
+{
+  "updated": "2026-04-25",
+  "window": "March 2026 / recent official public signals",
+  "sourceNote": "Sources: public Taipei Travel pages and Taiwan open-data metadata. This is not private social scraping.",
+  "sources": [
+    {
+      "label": "YouTube - public search links by language",
+      "url": "https://www.youtube.com/results?search_query=taipei+travel"
+    },
+    {
+      "label": "Instagram - public hashtag pages",
+      "url": "https://www.instagram.com/explore/tags/taipeitravel/"
+    },
+    {
+      "label": "Taipei Travel - Events & Exhibitions, Popular sort",
+      "url": "https://www.travel.taipei/en/activity"
+    },
+    {
+      "label": "Taipei Travel - Popular Attractions navigation",
+      "url": "https://www.travel.taipei/en/activity"
+    },
+    {
+      "label": "Data.gov.tw - Taipei City Taipei Travel Network Activity Exhibition, Open Government Data License",
+      "url": "https://data.gov.tw/en/datasets/128364"
+    }
+  ],
+  "youtube": [
+    {
+      "rank": 1,
+      "language": "English",
+      "query": "Taipei travel",
+      "theme": "Travel guide",
+      "url": "https://www.youtube.com/results?search_query=Taipei+travel&sp=CAM%253D",
+      "signal": "API-ready",
+      "why": "Useful for English travelers looking for full-trip Taipei videos. Once a YouTube key is added, this lane can rank videos by viewCount."
+    },
+    {
+      "rank": 2,
+      "language": "繁體中文",
+      "query": "台北 美食 景點",
+      "theme": "Food + places",
+      "url": "https://www.youtube.com/results?search_query=%E5%8F%B0%E5%8C%97+%E7%BE%8E%E9%A3%9F+%E6%99%AF%E9%BB%9E&sp=CAM%253D",
+      "signal": "API-ready",
+      "why": "Matches local-language searches around food and places, which are stronger for Taiwanese travel content."
+    },
+    {
+      "rank": 3,
+      "language": "日本語",
+      "query": "台北旅行 グルメ",
+      "theme": "Japan traveler buzz",
+      "url": "https://www.youtube.com/results?search_query=%E5%8F%B0%E5%8C%97%E6%97%85%E8%A1%8C+%E3%82%B0%E3%83%AB%E3%83%A1&sp=CAM%253D",
+      "signal": "API-ready",
+      "why": "Japanese Taipei travel searches often emphasize food, transit, and short itinerary videos."
+    },
+    {
+      "rank": 4,
+      "language": "한국어",
+      "query": "타이베이 여행 맛집",
+      "theme": "Korean traveler buzz",
+      "url": "https://www.youtube.com/results?search_query=%ED%83%80%EC%9D%B4%EB%B2%A0%EC%9D%B4+%EC%97%AC%ED%96%89+%EB%A7%9B%EC%A7%91&sp=CAM%253D",
+      "signal": "API-ready",
+      "why": "Korean Taipei searches are strong for food, cafes, shopping streets, and compact trip recaps."
+    }
+  ],
+  "instagram": [
+    {
+      "rank": 1,
+      "tag": "taipeitravel",
+      "label": "#taipeitravel",
+      "theme": "General travel",
+      "url": "https://www.instagram.com/explore/tags/taipeitravel/",
+      "why": "Broad public hashtag for Taipei travel photos and reels."
+    },
+    {
+      "rank": 2,
+      "tag": "台北美食",
+      "label": "#台北美食",
+      "theme": "Food",
+      "url": "https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E7%BE%8E%E9%A3%9F/",
+      "why": "Strong food-discovery hashtag for restaurants, cafes, night markets, and snacks."
+    },
+    {
+      "rank": 3,
+      "tag": "taipeicafe",
+      "label": "#taipeicafe",
+      "theme": "Cafes",
+      "url": "https://www.instagram.com/explore/tags/taipeicafe/",
+      "why": "Good proxy for lifestyle-heavy places that travelers may save."
+    },
+    {
+      "rank": 4,
+      "tag": "台北景點",
+      "label": "#台北景點",
+      "theme": "Attractions",
+      "url": "https://www.instagram.com/explore/tags/%E5%8F%B0%E5%8C%97%E6%99%AF%E9%BB%9E/",
+      "why": "Local-language attraction hashtag useful for popular photo spots."
+    }
+  ],
+  "events": [
+    {
+      "rank": 1,
+      "title": "Blending Scenery, Recasting Worlds",
+      "date": "2025-10-17 to 2026-03-08",
+      "signal": 1481,
+      "category": "Exhibition",
+      "why": "Highest visible popularity count among the March-ending Taipei Travel event listings.",
+      "url": "https://www.travel.taipei/en/activity"
+    },
+    {
+      "rank": 2,
+      "title": "Before the storm. Taiwan on the Frontier of Past and Future",
+      "date": "2025-11-15 to 2026-03-29",
+      "signal": 380,
+      "category": "Exhibition",
+      "why": "Strong March visibility and a late-March end date, useful for last-month recap logic.",
+      "url": "https://www.travel.taipei/en/activity"
+    },
+    {
+      "rank": 3,
+      "title": "Taipei Biennial 2025: Whispers on the Horizon",
+      "date": "2025-11-01 to 2026-03-29",
+      "signal": 315,
+      "category": "Exhibition",
+      "why": "High public interest signal for an art/event itinerary.",
+      "url": "https://www.travel.taipei/en/activity"
+    },
+    {
+      "rank": 4,
+      "title": "In the Company of Animals",
+      "date": "2026-01-17 to 2026-04-06",
+      "signal": 309,
+      "category": "Exhibition",
+      "why": "Recent cross-over event from March into early April.",
+      "url": "https://www.travel.taipei/en/activity"
+    },
+    {
+      "rank": 5,
+      "title": "Chiang Kai-shek Memorial Hall 7th Volunteer Exhibition",
+      "date": "2026-01-07 to 2026-03-08",
+      "signal": 233,
+      "category": "Exhibition",
+      "why": "March-ending cultural listing with a visible official popularity count.",
+      "url": "https://www.travel.taipei/en/activity"
+    }
+  ],
+  "places": [
+    {
+      "rank": 1,
+      "name": "Songshan Ciyou Temple",
+      "district": "Songshan",
+      "type": "Temple / culture",
+      "localHref": "/place/a/42",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    },
+    {
+      "rank": 2,
+      "name": "Daan Park",
+      "district": "Da'an",
+      "type": "Park / outdoor",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    },
+    {
+      "rank": 3,
+      "name": "Maokong Gondola",
+      "district": "Wenshan",
+      "type": "Viewpoint / ride",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    },
+    {
+      "rank": 4,
+      "name": "Elephant Mountain Hiking Trail",
+      "district": "Xinyi",
+      "type": "Hiking / night view",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    },
+    {
+      "rank": 5,
+      "name": "Raohe Street Tourist Night Market",
+      "district": "Songshan",
+      "type": "Night market / food",
+      "localHref": "/place/a/1",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    },
+    {
+      "rank": 6,
+      "name": "Beitou Hot Spring Museum",
+      "district": "Beitou",
+      "type": "Museum / hot spring",
+      "localHref": "/place/a/72",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    },
+    {
+      "rank": 7,
+      "name": "National Palace Museum",
+      "district": "Shilin",
+      "type": "Museum / culture",
+      "localHref": "/place/a/4",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    },
+    {
+      "rank": 8,
+      "name": "Taipei Beitou Geothermal Valley",
+      "district": "Beitou",
+      "type": "Nature / hot spring",
+      "localHref": "/place/a/36",
+      "sourceUrl": "https://www.travel.taipei/en/activity",
+      "why": "Listed by Taipei Travel as a Popular Attraction."
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+
+type Restaurant = {
+  suggestion_level: number;
+  name: string;
+  photo: string;
+  district: string;
+  opening_hours: string[];
+  categories: string[];
+  avg_price: number;
+  rating: number;
+  blog_link: string;
+  google_map: string;
+  ifoodie_link?: string;
+  lat?: number | null;
+  lng?: number | null;
+  address?: string;
+  ai_intro?: string;
+  ai_short?: string;
+};
+
+export async function getStaticPaths() {
+  const raw = fs.readFileSync(path.resolve('./public/data/restaurants.json'), 'utf8');
+  const data = JSON.parse(raw) as Restaurant[];
+  // Pre-render all restaurants. Astro can handle it, and it gives clean URLs for AI to link to.
+  return data.map((r, i) => ({
+    params: { id: String(i) },
+    props: { restaurant: r, idx: i },
+  }));
+}
+
+interface Props { restaurant: Restaurant; idx: number }
+const { restaurant, idx } = Astro.props as Props;
+const backHref = Astro.url.searchParams.get('from') === 'ai' ? '/ai' : '/';
+
+// Clean up opening hours — remove stars and spaces at start
+const cleanedHours = restaurant.opening_hours?.map((h) => h.replace(/^[\*\s]+/, '')) ?? [];
+
+// Price tier emoji
+const priceTier =
+  restaurant.avg_price >= 1500 ? '$$$$' :
+  restaurant.avg_price >= 800 ? '$$$' :
+  restaurant.avg_price >= 400 ? '$$' : '$';
+
+const WEEK_LABELS = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
+const WEEK_LABELS_EN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const today = (new Date().getDay() + 6) % 7;
+function translateDay(h: string, labels: string[]): string {
+  const idx = WEEK_LABELS.findIndex(label => h.startsWith(label));
+  return idx >= 0 ? labels[idx] + h.slice(WEEK_LABELS[idx].length) : h;
+}
+const translatedHours = cleanedHours.map(h => translateDay(h, WEEK_LABELS_EN));
+const todayRaw = cleanedHours.find((h) => h.startsWith(WEEK_LABELS[today])) ?? cleanedHours[0] ?? '—';
+const todayHours = translateDay(todayRaw, WEEK_LABELS_EN);
+
+const CATEGORY_EN: Record<string, string> = {
+  '義式料理':'Italian','午餐':'Lunch','晚餐':'Dinner','約會餐廳':'Date Night','早餐':'Breakfast',
+  '早午餐':'Brunch','下午茶':'Afternoon Tea','甜點':'Dessert','咖啡':'Coffee','精品咖啡':'Specialty Coffee',
+  '居酒屋':'Izakaya','和風洋食':'Japanese Western','日本料理':'Japanese','拉麵':'Ramen','壽司':'Sushi',
+  '燒肉':'Yakiniku','火鍋':'Hot Pot','涮涮鍋':'Shabu-Shabu','韓式料理':'Korean','韓式':'Korean Style',
+  '泰式料理':'Thai','越式料理':'Vietnamese','印度料理':'Indian','法式料理':'French','美式料理':'American',
+  '墨西哥料理':'Mexican','西班牙料理':'Spanish','港式料理':'Cantonese','廣東菜':'Cantonese','中式料理':'Chinese',
+  '客家料理':'Hakka','海鮮':'Seafood','牛排':'Steak','牛肉麵':'Beef Noodle','麵食':'Noodles','餃子':'Dumplings',
+  '小吃':'Street Food','宵夜':'Late Night','景觀餐廳':'Scenic Dining','親子餐廳':'Family Friendly',
+  '寵物友善':'Pet-Friendly','吃到飽':'All-You-Can-Eat','素食':'Vegetarian','合菜':'Banquet','熱炒':'Stir-fry',
+  '鐵板燒':'Teppanyaki','攤販':'Food Stall','餐盒':'Bento','速食餐廳':'Fast Food','外帶外送店家':'Takeout',
+  '烘焙坊':'Bakery','蛋糕':'Cake','冰品飲料':'Iced Drinks','冰淇淋':'Ice Cream','刨冰':'Shaved Ice',
+  '果汁吧':'Juice Bar','飲料店':'Drinks','茶店':'Tea Shop','啤酒':'Beer','啤酒吧':'Beer Bar','酒吧':'Bar',
+  '餐酒館':'Bistro','亞洲融合':'Asian Fusion','異國料理':'International','新加坡料理':'Singaporean',
+  '馬來西亞料理':'Malaysian','披薩':'Pizza','漢堡':'Burger','咖哩':'Curry','雞料理':'Chicken',
+  '精緻高級':'Fine Dining','新開幕':'Newly Opened','食品專賣店':'Specialty Shop','輕食':'Light Bites',
+  'Buffet':'Buffet','Fine Dining':'Fine Dining','POKE':'Poke','TAPAS':'Tapas',
+};
+const translateCat = (c: string) => CATEGORY_EN[c] ?? c;
+---
+
+<Layout title={`${restaurant.name} | Taipei Compass`}>
+  <main class="place-page">
+    <div class="place-nav">
+      <a href={backHref} class="back-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back
+      </a>
+    </div>
+
+    <section class="place-hero restaurant-hero">
+      {restaurant.photo && (
+        <img class="hero-bg" src={restaurant.photo} alt={restaurant.name} loading="eager" />
+      )}
+      <div class="hero-scrim"></div>
+      <div class="place-hero-inner">
+        <div class="place-kind">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">restaurant</span>
+          Restaurant · {restaurant.district}
+        </div>
+        <h1 class="place-h1">{restaurant.name}</h1>
+        <div class="place-chips">
+          {restaurant.rating > 0 && (
+            <span class="place-chip rating">
+              <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">star</span>
+              {restaurant.rating.toFixed(1)}
+            </span>
+          )}
+          {restaurant.avg_price > 0 && (
+            <span class="place-chip">NT${restaurant.avg_price} · {priceTier}</span>
+          )}
+          {restaurant.categories?.slice(0, 4).map((c) => (
+            <span class="place-chip ghost">{translateCat(c)}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="place-body">
+      <div class="place-grid">
+        <article class="place-about">
+          {restaurant.ai_intro && (
+            <p class="place-ai-intro">{restaurant.ai_intro}</p>
+          )}
+          <h2>Hours this week</h2>
+          <div class="hours-today">
+            <span class="material-symbols-outlined">schedule</span>
+            <div>
+              <div class="hours-label">Today</div>
+              <div class="hours-value">{todayHours}</div>
+            </div>
+          </div>
+          <ul class="hours-list">
+            {translatedHours.map((h, i) => (
+              <li class:list={[{ active: i === today }]}>{h}</li>
+            ))}
+          </ul>
+
+          {restaurant.categories?.length > 0 && (
+            <>
+              <h2 style="margin-top:2rem">Tags</h2>
+              <div class="place-chips" style="margin-top:0.5rem">
+                {restaurant.categories.map((c) => (
+                  <span class="place-chip outline">{translateCat(c)}</span>
+                ))}
+              </div>
+            </>
+          )}
+        </article>
+
+        <aside class="place-meta">
+          <div class="meta-card">
+            <div class="meta-row">
+              <span class="material-symbols-outlined">location_on</span>
+              <div>
+                <div class="meta-label">District</div>
+                <div class="meta-value">{restaurant.district || '—'}</div>
+              </div>
+            </div>
+            {restaurant.rating > 0 && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">star_rate</span>
+                <div>
+                  <div class="meta-label">Rating</div>
+                  <div class="meta-value">{restaurant.rating.toFixed(1)} / 5</div>
+                </div>
+              </div>
+            )}
+            {restaurant.avg_price > 0 && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">payments</span>
+                <div>
+                  <div class="meta-label">Avg. price</div>
+                  <div class="meta-value">NT${restaurant.avg_price}</div>
+                </div>
+              </div>
+            )}
+            <a class="meta-cta" href={restaurant.google_map} target="_blank" rel="noopener">
+              <span class="material-symbols-outlined">directions</span>
+              Open in Google Maps
+            </a>
+            {restaurant.blog_link && (
+              <a class="meta-cta ghost" href={restaurant.blog_link} target="_blank" rel="noopener" style="margin-top:0.5rem">
+                <span class="material-symbols-outlined">menu_book</span>
+                Read review
+              </a>
+            )}
+            {restaurant.ifoodie_link && (
+              <a class="ifoodie-card" href={restaurant.ifoodie_link} target="_blank" rel="noopener">
+                <img class="ifoodie-logo" src="/images/ifoodie-logo.png" alt="iFoodie" width="100" height="100" />
+                <span>View on 愛食記</span>
+              </a>
+            )}
+            <button
+              class="meta-cta trip-toggle"
+              id="add-to-trip"
+              type="button"
+              style="margin-top:0.5rem;background:transparent;border:1.5px solid var(--jade,#1E6B52);color:var(--jade,#1E6B52);cursor:pointer"
+              data-id={String(idx)}
+              data-type="r"
+              data-name={restaurant.name}
+              data-district={restaurant.district}
+              data-image={restaurant.photo || ''}
+              data-lat={String(restaurant.lat ?? '')}
+              data-lng={String(restaurant.lng ?? '')}
+              data-trip-href="/trip"
+            >
+              <span class="material-symbols-outlined" id="trip-icon">bookmark_add</span>
+              <span id="trip-label">Add to Trip</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Hidden canonical id for scripts / SEO -->
+    <meta data-place-id={`r:${idx}`} />
+  </main>
+
+  <style is:global>
+    .place-page { background: var(--parchment, #FDF6E3); min-height: 100vh; padding: 96px 2rem 4rem; color: var(--ink, #1a1a2e); }
+    .place-nav { max-width: 960px; margin: 0 auto 1rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--vermillion, #c0392b); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .back-link .material-symbols-outlined { font-size: 18px; }
+
+    .place-hero { position: relative; max-width: 960px; margin: 0 auto; border-radius: 16px; overflow: hidden; color: #fff; padding: 3.5rem 2.5rem; min-height: 320px; display: flex; align-items: flex-end; }
+    .restaurant-hero { background: #1a1a2e; }
+    .place-hero .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; z-index: 0; }
+    .place-hero .hero-scrim { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.1) 100%); z-index: 1; }
+    .place-hero-inner { position: relative; z-index: 2; }
+    .place-kind { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 0.5rem; }
+    .place-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; margin: 0.25rem 0 1rem; line-height: 1.1; }
+    .place-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .place-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.22); color: #fff; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.82rem; backdrop-filter: blur(6px); }
+    .place-chip.rating { background: #f59e0b; color: #1a1a2e; font-weight: 700; }
+    .place-chip.ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.3); }
+    .place-chip.outline { background: #fff; color: var(--vermillion, #c0392b); border: 1px solid rgba(192,57,43,0.25); }
+
+    .place-body { max-width: 960px; margin: 2rem auto 0; }
+    .place-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .place-ai-intro { font-size: 0.95rem; line-height: 1.7; color: var(--text-secondary); margin: 0 0 1.5rem; padding: 0.85rem 1rem; background: rgba(192,57,43,0.04); border-left: 3px solid var(--vermillion); border-radius: 0 6px 6px 0; }
+    .place-about h2 { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; margin: 0 0 0.75rem; }
+    .hours-today { display: flex; gap: 0.75rem; background: #fff; border: 1px solid rgba(192,57,43,0.15); border-left: 4px solid var(--vermillion, #c0392b); border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 1rem; }
+    .hours-today .material-symbols-outlined { color: var(--vermillion, #c0392b); }
+    .hours-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary, #666); }
+    .hours-value { font-size: 1rem; margin-top: 0.1rem; font-weight: 500; }
+    .hours-list { list-style: none; padding: 0; margin: 0 0 0.5rem; background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; overflow: hidden; }
+    .hours-list li { padding: 0.55rem 1rem; border-bottom: 1px dashed rgba(0,0,0,0.08); font-size: 0.92rem; }
+    .hours-list li:last-child { border-bottom: none; }
+    .hours-list li.active { background: rgba(192,57,43,0.05); font-weight: 600; }
+
+    .meta-card { background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+    .meta-row { display: flex; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px dashed rgba(0,0,0,0.08); }
+    .meta-row:last-of-type { border-bottom: none; }
+    .meta-row .material-symbols-outlined { color: var(--vermillion, #c0392b); font-size: 20px; margin-top: 0.15rem; }
+    .meta-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary, #666); }
+    .meta-value { font-size: 0.95rem; margin-top: 0.1rem; }
+    .meta-cta { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1rem; background: var(--vermillion, #c0392b); color: #fff; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; width: 100%; justify-content: center; box-sizing: border-box; }
+    .meta-cta.ghost { background: transparent; color: var(--vermillion, #c0392b); border: 1px solid var(--vermillion, #c0392b); }
+    .meta-cta:hover { filter: brightness(1.08); }
+    .meta-cta .material-symbols-outlined { font-size: 18px; }
+    .ifoodie-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-decoration: none; border: 1.5px solid rgba(192,57,43,0.18); border-radius: 12px; padding: 1rem; margin-top: 0.5rem; color: var(--vermillion); font-weight: 600; font-size: 0.9rem; transition: all 0.15s; }
+    .ifoodie-card:hover { background: rgba(192,57,43,0.05); border-color: var(--vermillion); }
+    .ifoodie-logo { width: 100px; height: 100px; border-radius: 20px; object-fit: cover; }
+
+    @media (max-width: 768px) {
+      .place-page { padding: 88px 1.25rem 3rem; }
+      .place-hero { padding: 2.5rem 1.5rem; min-height: 260px; }
+      .place-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    }
+    .trip-toggle.saved {
+      background: var(--jade, #1E6B52) !important;
+      color: #fff !important;
+      border-color: var(--jade, #1E6B52) !important;
+    }
+  </style>
+
+  <script is:inline>
+  (function () {
+    const KEY = 'ytp_trip';
+    const btn = document.getElementById('add-to-trip');
+    if (!btn) return;
+
+    const { id, type, name, district, image } = btn.dataset;
+
+    function loadTrip() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(KEY) || '[]');
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && Array.isArray(parsed.places)) return parsed.places;
+        return [];
+      } catch {
+        return [];
+      }
+    }
+    function saveTrip(arr) { localStorage.setItem(KEY, JSON.stringify(arr)); }
+    function isSaved() { return loadTrip().some(p => p.type === type && p.id === id); }
+
+    function sync() {
+      const saved = isSaved();
+      btn.classList.toggle('saved', saved);
+      document.getElementById('trip-icon').textContent = saved ? 'bookmark_remove' : 'bookmark_add';
+      document.getElementById('trip-label').textContent = saved ? 'Saved to Trip ✓' : 'Add to Trip';
+    }
+
+    btn.addEventListener('click', () => {
+      const trip = loadTrip();
+      if (isSaved()) {
+        saveTrip(trip.filter(p => !(p.type === type && p.id === id)));
+      } else {
+        const lat = btn.dataset.lat ? parseFloat(btn.dataset.lat) : null;
+        const lng = btn.dataset.lng ? parseFloat(btn.dataset.lng) : null;
+        trip.push({ id, type, name, district, lat, lng, image });
+        saveTrip(trip);
+        window.location.href = btn.dataset.tripHref || '/trip';
+      }
+      sync();
+    });
+
+    sync();
+  })();
+  </script>
+</Layout>

@@ -1,0 +1,917 @@
+---
+// src/layouts/Layout.astro
+export interface Props {
+  title?: string;
+}
+
+const { title = "Taipei Compass｜Your Taipei Inspiration Guide" } = Astro.props;
+const currentPath = Astro.url.pathname;
+const isChinese = currentPath.startsWith('/zh');
+const isJapanese = currentPath.startsWith('/jp');
+const isKorean = currentPath.startsWith('/kr');
+const isEnglish = !isChinese && !isJapanese && !isKorean;
+const htmlLang = isChinese ? 'zh-TW' : (isJapanese ? 'ja' : (isKorean ? 'ko' : 'en'));
+const brandTitle = isChinese ? '台北指南針' : (isJapanese ? '台北コンパス' : (isKorean ? '타이베이 나침반' : 'Taipei Compass'));
+const prelogLink = isChinese ? '/zh/prelog' : (isJapanese ? '/jp/prelog' : (isKorean ? '/kr/prelog' : '/prelog'));
+const prefNudge = isChinese
+  ? { title: '想要更符合你的台北推薦嗎？', body: '回答幾個偏好問題，我們會依你的興趣、節奏和區域調整景點排序。', primary: '開始個人化', secondary: '稍後再說' }
+  : isJapanese
+    ? { title: 'あなた向けの台北おすすめにしますか？', body: '興味・旅のペース・好きなエリアに合わせてスポットを並び替えます。', primary: '好みを設定', secondary: 'あとで' }
+    : isKorean
+      ? { title: '나에게 맞는 타이베이 추천을 받을까요?', body: '관심사, 여행 페이스, 선호 지역에 맞춰 명소 추천 순서를 조정합니다.', primary: '취향 설정', secondary: '나중에' }
+      : { title: 'Want better Taipei recommendations?', body: 'Answer a few preference questions so we can tune picks by interests, pace, and districts.', primary: 'Personalize', secondary: 'Maybe later' };
+
+const langCycle = [
+  { code: 'en', label: 'EN' },
+  { code: 'zh', label: '中' },
+  { code: 'jp', label: '日' },
+  { code: 'kr', label: '한' },
+];
+
+const getCurrentLangIdx = () => {
+  if (currentPath.startsWith('/kr')) return 3;
+  if (currentPath.startsWith('/jp')) return 2;
+  if (currentPath.startsWith('/zh')) return 1;
+  return 0;
+};
+
+const currentLangIdx = getCurrentLangIdx();
+const currentLang = langCycle[currentLangIdx];
+const nextLang = langCycle[(currentLangIdx + 1) % langCycle.length];
+
+const getLangPath = (langCode: string) => {
+  const basePath = currentPath.replace(/^\/(zh|jp|kr)/, '') || '/';
+  if (langCode === 'en') return basePath;
+  if (langCode === 'zh') return '/zh' + basePath;
+  return '/' + langCode + basePath;
+};
+const nextPath = getLangPath(nextLang.code);
+
+const getNavLink = (page: string) => {
+  if (page === 'home') {
+    if (currentPath.startsWith('/zh')) return '/zh';
+    if (currentPath.startsWith('/jp')) return '/jp';
+    if (currentPath.startsWith('/kr')) return '/kr';
+    return '/';
+  }
+  if (page === 'ai') {
+    if (currentPath.startsWith('/zh')) return '/zh/ai';
+    if (currentPath.startsWith('/jp')) return '/jp/ai';
+    if (currentPath.startsWith('/kr')) return '/kr/ai';
+    return '/ai';
+  }
+  if (page === 'trending') {
+    if (currentPath.startsWith('/zh')) return '/zh/trending';
+    if (currentPath.startsWith('/jp')) return '/jp/trending';
+    if (currentPath.startsWith('/kr')) return '/kr/trending';
+    return '/trending';
+  }
+  if (page === 'hotels') {
+    if (currentPath.startsWith('/zh')) return '/zh/hotels';
+    if (currentPath.startsWith('/jp')) return '/jp/hotels';
+    if (currentPath.startsWith('/kr')) return '/kr/hotels';
+    return '/hotels';
+  }
+  if (page === 'explore') {
+    if (currentPath.startsWith('/zh')) return '/zh/explore';
+    if (currentPath.startsWith('/jp')) return '/jp/explore';
+    if (currentPath.startsWith('/kr')) return '/kr/explore';
+    return '/explore';
+  }
+  return '/';
+};
+
+const getNavLabel = (page: string) => {
+  if (page === 'home') {
+    if (isKorean) return '홈';
+    if (isJapanese) return 'ホーム';
+    if (isChinese) return '首頁';
+    return 'Home';
+  }
+  if (page === 'ai') {
+    if (isKorean) return 'AI 도우미';
+    if (isJapanese) return 'AI助手';
+    if (isChinese) return 'AI 助手';
+    return 'AI Assistant';
+  }
+  if (page === 'trending') {
+    if (isKorean) return '요즘 뜨는 곳';
+    if (isJapanese) return '話題のスポット';
+    if (isChinese) return '熱門趨勢';
+    return 'Trending';
+  }
+  if (page === 'hotels') {
+    if (isKorean) return '호텔';
+    if (isJapanese) return 'ホテル';
+    if (isChinese) return '旅館';
+    return 'Hotels';
+  }
+  if (page === 'explore') {
+    if (isKorean) return '명소 탐색';
+    if (isJapanese) return 'スポット一覧';
+    if (isChinese) return '探索景點';
+    return 'Explore';
+  }
+  return '';
+};
+
+const isExploreActive = currentPath === '/explore' || currentPath === '/zh/explore' || currentPath === '/jp/explore' || currentPath === '/kr/explore';
+const isHomeActive = currentPath === '/' || currentPath === '/zh' || currentPath === '/jp' || currentPath === '/kr';
+const shouldShowPrefNudge = isHomeActive;
+const isAiActive = currentPath === '/ai' || currentPath === '/zh/ai' || currentPath === '/jp/ai' || currentPath === '/kr/ai';
+const isTrendingActive = currentPath === '/trending' || currentPath === '/zh/trending' || currentPath === '/jp/trending' || currentPath === '/kr/trending';
+const isHotelsActive =
+  currentPath === '/hotels' ||
+  currentPath === '/hotel-check' ||
+  currentPath.startsWith('/hotel/') ||
+  currentPath === '/zh/hotels' ||
+  currentPath === '/zh/hotel-check' ||
+  currentPath.startsWith('/zh/hotel/') ||
+  currentPath === '/jp/hotels' ||
+  currentPath === '/jp/hotel-check' ||
+  currentPath.startsWith('/jp/hotel/') ||
+  currentPath === '/kr/hotels' ||
+  currentPath === '/kr/hotel-check' ||
+  currentPath.startsWith('/kr/hotel/');
+const tripLink = isChinese ? '/zh/trip' : (isJapanese ? '/jp/trip' : (isKorean ? '/kr/trip' : '/trip'));
+const homeTourCopy = isChinese
+  ? {
+      eyebrow: '首次導覽',
+      title: '快速認識台北指南針',
+      skip: '跳過',
+      back: '上一步',
+      next: '下一步',
+      finish: '開始探索',
+      stepLabel: '步驟',
+      openLabel: '前往',
+      steps: [
+        { target: '#navPrefsBtn', title: '偏好設定', body: '這個按鈕可以設定興趣、行政區、旅行節奏和天數，讓推薦更符合使用者。', cta: '設定偏好', href: prelogLink },
+        { target: '#bento', title: '首頁推薦區', body: '這裡展示推薦景點、附近景點、行程摘要等首頁重點內容。', cta: '看景點', href: getNavLink('explore') },
+        { target: '.bento-card', title: '景點卡片', body: '點擊卡片可以查看地點詳情；詳細頁裡會有地圖、資訊和加入行程按鈕。', cta: 'Explore', href: getNavLink('explore') },
+        { target: 'a[href="' + tripLink + '"]', title: '排進每日時段', body: '在 My Trip 裡把收藏的地點拖到早上、下午、晚上，並用 Google Maps 開路線。', cta: '打開行程', href: tripLink },
+        { target: '.nav-links a[href="' + getNavLink('explore') + '"]', title: 'Explore 是完整資料庫', body: '用類別、區域和關鍵字快速瀏覽景點與餐廳，適合 demo 時展示資料量。', cta: 'Explore', href: getNavLink('explore') },
+        { target: '.nav-links a[href="' + getNavLink('ai') + '"]', title: 'AI 助手會問問題', body: '當偏好不明確時，AI 會先追問，再用天氣、位置和資料庫推薦。', cta: 'AI 助手', href: getNavLink('ai') },
+        { target: '.nav-links a[href="' + getNavLink('trending') + '"]', title: '熱門趨勢看社群靈感', body: 'Trending 整理 YouTube、社群標籤和討論來源，幫旅客找到最近大家在看的台北。', cta: '看趨勢', href: getNavLink('trending') },
+      ],
+    }
+  : isJapanese
+    ? {
+        eyebrow: '初回ガイド',
+        title: '台北コンパスの使い方',
+        skip: 'スキップ',
+        back: '戻る',
+        next: '次へ',
+        finish: '探索を始める',
+        stepLabel: 'ステップ',
+        openLabel: '開く',
+        steps: [
+          { target: '#navPrefsBtn', title: '好み設定ボタン', body: '興味、エリア、旅のペース、日数を設定しておすすめを調整できます。', cta: '好みを設定', href: prelogLink },
+          { target: '#bento', title: 'ホームのおすすめ', body: 'おすすめスポット、近くの場所、旅程の概要などをここで確認できます。', cta: 'スポット一覧', href: getNavLink('explore') },
+          { target: '.bento-card', title: 'スポットカード', body: 'カードを開くと、詳細情報、地図、旅程への追加ボタンが見られます。', cta: 'Explore', href: getNavLink('explore') },
+          { target: 'a[href="' + tripLink + '"]', title: '日程に入れる', body: 'My Trip で保存した場所を朝・昼・夜に並べ、Google Maps でルートを開けます。', cta: '旅程を開く', href: tripLink },
+          { target: '.nav-links a[href="' + getNavLink('explore') + '"]', title: 'Explore は全体検索', body: 'カテゴリ、エリア、キーワードでスポットやレストランを探せます。', cta: 'Explore', href: getNavLink('explore') },
+          { target: '.nav-links a[href="' + getNavLink('ai') + '"]', title: 'AI 助手が質問します', body: '好みが足りない時は AI が追加で質問し、天気・位置・データを使って提案します。', cta: 'AI 助手', href: getNavLink('ai') },
+          { target: '.nav-links a[href="' + getNavLink('trending') + '"]', title: 'Trending で話題を確認', body: 'YouTube、SNS タグ、旅行者の話題から、今注目の台北を見つけます。', cta: 'トレンド', href: getNavLink('trending') },
+        ],
+      }
+    : isKorean
+      ? {
+          eyebrow: '첫 방문 가이드',
+          title: '타이베이 나침반 사용법',
+          skip: '건너뛰기',
+          back: '이전',
+          next: '다음',
+          finish: '탐색 시작',
+          stepLabel: '단계',
+          openLabel: '열기',
+          steps: [
+            { target: '#navPrefsBtn', title: '취향 설정 버튼', body: '관심사, 지역, 여행 속도, 일수를 설정해 추천을 조정할 수 있습니다.', cta: '취향 설정', href: prelogLink },
+            { target: '#bento', title: '홈 추천 영역', body: '추천 명소, 주변 장소, 일정 요약 같은 핵심 정보를 여기서 볼 수 있습니다.', cta: '명소 보기', href: getNavLink('explore') },
+            { target: '.bento-card', title: '명소 카드', body: '카드를 열면 상세 정보, 지도, 일정 추가 버튼을 확인할 수 있습니다.', cta: 'Explore', href: getNavLink('explore') },
+            { target: 'a[href="' + tripLink + '"]', title: '일정에 넣기', body: 'My Trip에서 저장한 장소를 오전, 오후, 저녁 슬롯에 배치하고 Google Maps 경로를 열 수 있습니다.', cta: '일정 열기', href: tripLink },
+            { target: '.nav-links a[href="' + getNavLink('explore') + '"]', title: 'Explore는 전체 검색입니다', body: '카테고리, 지역, 키워드로 명소와 식당을 빠르게 찾을 수 있습니다.', cta: 'Explore', href: getNavLink('explore') },
+            { target: '.nav-links a[href="' + getNavLink('ai') + '"]', title: 'AI 도우미가 질문합니다', body: '취향 정보가 부족하면 AI가 먼저 물어보고, 날씨와 위치, 데이터를 바탕으로 추천합니다.', cta: 'AI 도우미', href: getNavLink('ai') },
+            { target: '.nav-links a[href="' + getNavLink('trending') + '"]', title: 'Trending에서 인기 흐름 보기', body: 'YouTube, SNS 태그, 여행자 토론을 통해 요즘 주목받는 타이베이를 보여줍니다.', cta: '트렌드 보기', href: getNavLink('trending') },
+          ],
+        }
+      : {
+          eyebrow: 'First-time guide',
+          title: 'Your Taipei Compass walkthrough',
+          skip: 'Skip',
+          back: 'Back',
+          next: 'Next',
+          finish: 'Start exploring',
+          stepLabel: 'Step',
+          openLabel: 'Go to',
+          steps: [
+            { target: '#navPrefsBtn', title: 'Preferences button', body: 'Use this to choose interests, districts, trip pace, and days so recommendations can adjust.', cta: 'Set preferences', href: prelogLink },
+            { target: '#bento', title: 'Home recommendation area', body: 'This section shows recommended places, nearby ideas, and trip summary widgets from the homepage.', cta: 'Browse attractions', href: getNavLink('explore') },
+            { target: '.bento-card', title: 'Place cards', body: 'Cards open detail pages with maps, place information, and an Add to Trip button.', cta: 'Explore', href: getNavLink('explore') },
+            { target: 'a[href="' + tripLink + '"]', title: 'Add saved places into a schedule', body: 'Use My Trip to place stops into morning, afternoon, and evening slots, then open the route in Google Maps.', cta: 'Open My Trip', href: tripLink },
+            { target: '.nav-links a[href="' + getNavLink('explore') + '"]', title: 'Use Explore for the full database', body: 'Filter attractions and restaurants by category, district, and keywords when you want to browse more deeply.', cta: 'Explore', href: getNavLink('explore') },
+            { target: '.nav-links a[href="' + getNavLink('ai') + '"]', title: 'Ask the AI assistant', body: 'If the system does not know enough yet, AI asks follow-up questions and uses location, weather, and grounded data.', cta: 'AI Assistant', href: getNavLink('ai') },
+            { target: '.nav-links a[href="' + getNavLink('trending') + '"]', title: 'Check what is hot now', body: 'Trending gathers YouTube, social hashtags, and travel discussions so visitors can discover timely Taipei ideas.', cta: 'Trending', href: getNavLink('trending') },
+          ],
+        };
+const continueTourCopy = homeTourCopy;
+const shouldRenderTour = true;
+---
+
+<!DOCTYPE html>
+<html lang={htmlLang} class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Liu+Jian+Mao+Cao&family=Cinzel:wght@600;700;800&family=Shippori+Mincho:wght@400;500;600;700;800&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+  <style is:global>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --vermillion: #C0392B;
+      --vermillion-dark: #922B21;
+      --vermillion-light: #F1948A;
+      --gold: #D4A017;
+      --gold-light: #F7DC6F;
+      --jade: #1E6B52;
+      --jade-light: #27AE60;
+      --ink: #1A1A2E;
+      --ink-soft: #2C2C54;
+      --parchment: #FDF6E3;
+      --parchment-dark: #F5ECD7;
+      --warm-white: #FEFAF4;
+      --text-primary: #1A1A2E;
+      --text-secondary: #5D4E37;
+      --text-muted: #8B7355;
+    }
+
+    html { 
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: var(--warm-white);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      cursor: none;
+      text-rendering: optimizeLegibility;
+      line-height: 1.6;
+      letter-spacing: 0.3px;
+    }
+
+    html[lang="ja"] body {
+      font-family: 'Shippori Mincho', 'Noto Serif TC', serif;
+    }
+
+    /* ── CURSOR ── */
+    .cursor {
+      position: fixed;
+      width: 12px; height: 12px;
+      background: var(--vermillion);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: multiply;
+      left: -100px; top: -100px;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1.5px solid var(--vermillion);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      opacity: 0.6;
+      left: -100px; top: -100px;
+    }
+    body:has(a:hover) .cursor,
+    body:has(button:hover) .cursor { width: 20px; height: 20px; }
+    body:has(a:hover) .cursor-ring,
+    body:has(button:hover) .cursor-ring { width: 50px; height: 50px; opacity: 0.3; }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9997;
+      opacity: 0.4;
+    }
+
+    /* ── NAV & BUTTONS ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 2.5rem;
+      height: 72px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(253, 246, 227, 0.85);
+      backdrop-filter: blur(16px) saturate(1.8);
+      border-bottom: 1px solid rgba(192, 57, 43, 0.12);
+      transition: background 0.3s ease;
+    }
+    nav.scrolled {
+      background: rgba(253, 246, 227, 0.96);
+      box-shadow: 0 2px 24px rgba(192, 57, 43, 0.08);
+    }
+
+    .nav-brand {
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--vermillion);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    html[lang="zh-TW"] .nav-brand {
+      font-family: 'Liu Jian Mao Cao', cursive;
+    }
+    html[lang="ja"] .nav-brand {
+      font-family: 'Zen Kaku Gothic New', 'Noto Sans JP', sans-serif;
+    }
+    html[lang="ko"] .nav-brand {
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    html[lang="en"] .nav-brand {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+    }
+    .nav-brand::before {
+      content: '✦';
+      font-size: 0.8rem;
+      font-family: 'Noto Serif TC', serif;
+      color: var(--gold);
+      animation: spin 8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.875rem; font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      position: relative;
+      padding-bottom: 4px;
+      transition: color 0.2s;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--vermillion);
+      transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .nav-links a:hover { color: var(--vermillion); }
+    .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+    .nav-links a.active { color: var(--vermillion); }
+
+    .nav-cta { display: flex; align-items: center; gap: 0.75rem; }
+
+    .nav-prefs-btn {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.45rem 0.75rem; border-radius: 3px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em;
+      color: var(--text-secondary); text-decoration: none;
+      border: 1.5px solid rgba(192,57,43,0.22);
+      transition: all 0.2s ease; position: relative;
+    }
+    .nav-prefs-btn:hover { color: var(--vermillion); border-color: var(--vermillion); background: rgba(192,57,43,0.05); }
+    .nav-prefs-btn.no-prefs::after {
+      content: ''; position: absolute; top: -3px; right: -3px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--jade); border: 1.5px solid var(--warm-white);
+    }
+
+    .lang-dropdown {
+      position: relative;
+    }
+    .lang-toggle {
+      display: flex; align-items: center; gap: 0.3rem;
+      background: rgba(192,57,43,0.06);
+      border: 1.5px solid rgba(192,57,43,0.22);
+      border-radius: 3px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease; line-height: 1;
+      user-select: none;
+    }
+    .lang-toggle:hover { color: var(--vermillion); background: rgba(192,57,43,0.12); border-color: rgba(192,57,43,0.35); }
+    .lang-toggle .lang-chevron {
+      font-size: 12px; transition: transform 0.2s ease;
+      font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20;
+    }
+    .lang-dropdown.open .lang-chevron { transform: rotate(180deg); }
+    .lang-menu {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      background: rgba(253,246,227,0.98); border: 1px solid rgba(192,57,43,0.18);
+      border-radius: 6px; overflow: hidden;
+      box-shadow: 0 8px 24px rgba(26,26,46,0.12);
+      backdrop-filter: blur(16px);
+      min-width: 150px;
+      opacity: 0; transform: translateY(-6px);
+      pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      z-index: 200;
+    }
+    .lang-dropdown.open .lang-menu { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .lang-option {
+      display: flex; align-items: center; gap: 0.55rem;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.8rem; font-weight: 600;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+    .lang-option:hover { background: rgba(192,57,43,0.07); color: var(--vermillion); }
+    .lang-option.active { color: var(--vermillion); font-weight: 800; background: rgba(192,57,43,0.05); }
+    .lang-option .lang-flag { font-size: 1rem; line-height: 1; }
+    .lang-btn {
+      background: none; border: none;
+      padding: 0.3rem 0.65rem;
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      cursor: pointer; border-radius: 2px;
+      transition: all 0.2s ease; line-height: 1;
+      text-decoration: none;
+    }
+    .lang-btn:hover { color: var(--vermillion); background: rgba(192,57,43,0.08); }
+
+    .btn-primary, .btn-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.6rem 1.4rem; border-radius: 3px;
+      font-size: 0.875rem; font-weight: 700; letter-spacing: 0.06em;
+      cursor: pointer; text-decoration: none; transition: all 0.15s ease;
+    }
+    .btn-primary {
+      background: var(--vermillion); color: #fff; border: none;
+      position: relative; overflow: hidden;
+    }
+    .btn-primary::before {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      width: 0; height: 0; background: rgba(255,255,255,0.2);
+      border-radius: 50%; transform: translate(-50%, -50%);
+      transition: width 0.4s ease, height 0.4s ease;
+    }
+    .btn-primary:hover::before { width: 200px; height: 200px; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(192,57,43,0.35); }
+    .btn-primary:active { transform: translateY(0) scale(0.98); box-shadow: none; }
+    
+    .btn-ghost {
+      background: transparent; color: var(--vermillion);
+      border: 1.5px solid var(--vermillion);
+    }
+    .btn-ghost:hover { background: var(--vermillion); color: #fff; transform: translateY(-1px); }
+
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: 4px;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px;
+      background: var(--vermillion); transition: all 0.3s ease; transform-origin: center;
+    }
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+    .mobile-menu {
+      visibility: hidden; position: fixed; top: 72px; left: 0; right: 0;
+      background: rgba(253,246,227,0.98); border-bottom: 1px solid rgba(192,57,43,0.15);
+      padding: 0 2.5rem; z-index: 99; flex-direction: column; gap: 1.2rem;
+      backdrop-filter: blur(16px); transform: translateY(-20px); opacity: 0;
+      transition: all 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+      pointer-events: none; max-height: 0; overflow: hidden;
+    }
+    .mobile-menu.open { visibility: visible; transform: translateY(0); opacity: 1; pointer-events: auto; max-height: 400px; padding: 1.5rem 2.5rem; }
+    .mobile-menu a {
+      font-size: 1.1rem; font-weight: 500; color: var(--text-secondary); text-decoration: none;
+      padding-bottom: 0.8rem; border-bottom: 1px solid rgba(192,57,43,0.1); transition: color 0.2s;
+    }
+    .mobile-menu a:hover { color: var(--vermillion); }
+
+    .pref-nudge { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 120; width: min(360px, calc(100vw - 2rem)); background: rgba(255,255,255,0.96); border: 1px solid rgba(30,107,82,0.16); border-radius: 8px; box-shadow: 0 22px 54px rgba(26,26,46,0.16); padding: 1rem; backdrop-filter: blur(18px); transform: translateY(18px); opacity: 0; pointer-events: none; transition: opacity 0.22s ease, transform 0.22s ease; }
+    .pref-nudge.is-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .pref-nudge-kicker { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--vermillion); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.35rem; }
+    .pref-nudge h2 { font-size: 1.05rem; line-height: 1.25; color: var(--ink); margin: 0 0 0.35rem; }
+    .pref-nudge p { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.55; margin: 0 0 0.85rem; }
+    .pref-nudge-actions { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
+    .pref-nudge-primary, .pref-nudge-secondary { min-height: 38px; border-radius: 8px; font: inherit; font-size: 0.82rem; font-weight: 900; cursor: pointer; padding: 0.55rem 0.82rem; }
+    .pref-nudge-primary { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--jade); border: 1px solid var(--jade); color: #fff; text-decoration: none; }
+    .pref-nudge-secondary { background: transparent; border: 1px solid rgba(26,26,46,0.12); color: var(--text-secondary); }
+
+    .home-tour-backdrop { position: fixed; inset: 0; z-index: 8500; background: rgba(26,26,46,0.34); opacity: 0; pointer-events: none; transition: opacity 0.22s ease; }
+    .home-tour-backdrop.is-visible { opacity: 1; pointer-events: none; }
+    .home-tour-card { position: fixed; z-index: 8502; width: min(420px, calc(100vw - 2rem)); background: rgba(254,250,244,0.98); border: 1px solid rgba(192,57,43,0.18); border-radius: 12px; box-shadow: 0 26px 80px rgba(26,26,46,0.28); padding: 1rem; opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity 0.22s ease, transform 0.22s ease, left 0.18s ease, top 0.18s ease; }
+    .home-tour-card.is-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .home-tour-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.65rem; }
+    .home-tour-eyebrow { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--vermillion); font-size: 0.7rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; }
+    .home-tour-close { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid rgba(26,26,46,0.1); border-radius: 8px; background: rgba(255,255,255,0.7); color: var(--text-secondary); cursor: pointer; }
+    .home-tour-card h2 { font-family: 'Noto Serif TC', serif; color: var(--ink); font-size: 1.28rem; line-height: 1.25; margin: 0 0 0.45rem; }
+    .home-tour-card p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.58; margin: 0 0 0.9rem; }
+    .home-tour-progress { display: flex; align-items: center; gap: 0.45rem; margin: 0.75rem 0 1rem; }
+    .home-tour-dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(139,115,85,0.26); transition: width 0.18s ease, background 0.18s ease; }
+    .home-tour-dot.active { width: 24px; background: var(--vermillion); }
+    .home-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.65rem; flex-wrap: wrap; }
+    .home-tour-left-actions, .home-tour-right-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .home-tour-btn { min-height: 38px; border-radius: 8px; padding: 0.52rem 0.82rem; font: inherit; font-size: 0.82rem; font-weight: 900; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.28rem; }
+    .home-tour-btn.secondary { background: transparent; border: 1px solid rgba(26,26,46,0.12); color: var(--text-secondary); }
+    .home-tour-btn.primary { background: var(--vermillion); border: 1px solid var(--vermillion); color: #fff; }
+    .home-tour-btn.link { background: rgba(30,107,82,0.08); border: 1px solid rgba(30,107,82,0.16); color: var(--jade); }
+    .home-tour-focus { position: relative; z-index: 8501 !important; opacity: 1 !important; filter: none !important; outline: 3px solid rgba(247,220,111,0.95) !important; outline-offset: 5px !important; box-shadow: 0 16px 44px rgba(26,26,46,0.26) !important; border-radius: 8px; pointer-events: auto !important; }
+    .home-tour-replay { position: fixed; right: 1.2rem; bottom: 1.2rem; z-index: 130; width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(192,57,43,0.18); background: rgba(254,250,244,0.95); color: var(--vermillion); box-shadow: 0 12px 34px rgba(26,26,46,0.14); cursor: pointer; display: none; align-items: center; justify-content: center; }
+    .home-tour-replay.is-visible { display: inline-flex; }
+
+    /* UI ANIMATIONS */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    @media (max-width: 900px) {
+      .nav-prefs-label { display: none; }
+      .nav-prefs-btn { padding: 0.45rem 0.5rem; }
+    }
+    @media (max-width: 768px) {
+      body { cursor: auto; }
+      .cursor, .cursor-ring { display: none; }
+      nav { padding: 0 1.5rem; }
+      .nav-links, .lang-dropdown, .nav-prefs-btn { display: none; }
+      .hamburger { display: flex; }
+      .pref-nudge { left: 1rem; right: 1rem; bottom: 1rem; width: auto; }
+      .home-tour-card { left: 1rem !important; right: 1rem !important; bottom: 1rem !important; top: auto !important; width: auto; }
+      .home-tour-actions { align-items: stretch; }
+      .home-tour-left-actions, .home-tour-right-actions { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <nav id="mainNav">
+    <a href={getNavLink('home')} class="nav-brand">{brandTitle}</a>
+    <ul class="nav-links">
+      <li><a href={getNavLink('home')} class={isHomeActive ? 'active' : ''}>{getNavLabel('home')}</a></li>
+      <li><a href={getNavLink('ai')} class={isAiActive ? 'active' : ''}>{getNavLabel('ai')}</a></li>
+      <li><a href={getNavLink('explore')} class={isExploreActive ? 'active' : ''}>{getNavLabel('explore')}</a></li>
+      <li><a href={getNavLink('hotels')} class={isHotelsActive ? 'active' : ''}>{getNavLabel('hotels')}</a></li>
+      <li><a href={getNavLink('trending')} class={isTrendingActive ? 'active' : ''}>{getNavLabel('trending')}</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href={prelogLink} class="nav-prefs-btn" id="navPrefsBtn" title={prefNudge.primary}>
+        <span class="material-symbols-outlined" style="font-size:17px">tune</span>
+        <span class="nav-prefs-label">{isChinese ? '偏好' : (isJapanese ? '設定' : (isKorean ? '설정' : 'Prefs'))}</span>
+      </a>
+      <div class="lang-dropdown" id="langDropdown">
+        <button class="lang-toggle" id="langToggleBtn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">
+          {currentLang.label}
+          <span class="material-symbols-outlined lang-chevron">expand_more</span>
+        </button>
+        <div class="lang-menu" role="listbox">
+          <a href={getLangPath('en')} class={"lang-option" + (isEnglish  ? " active" : "")} role="option"><span class="lang-flag">🇺🇸</span> English</a>
+          <a href={getLangPath('zh')} class={"lang-option" + (isChinese  ? " active" : "")} role="option"><span class="lang-flag">🇹🇼</span> 繁體中文</a>
+          <a href={getLangPath('jp')} class={"lang-option" + (isJapanese ? " active" : "")} role="option"><span class="lang-flag">🇯🇵</span> 日本語</a>
+          <a href={getLangPath('kr')} class={"lang-option" + (isKorean  ? " active" : "")} role="option"><span class="lang-flag">🇰🇷</span> 한국어</a>
+        </div>
+      </div>
+      <a href={tripLink} class="btn-primary">
+        <span class="material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20">map</span>
+        {isChinese ? '規劃行程' : (isJapanese ? '旅程計画' : (isKorean ? '여행 계획' : 'My Trip'))}
+      </a>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <a href={getNavLink('home')} class={isHomeActive ? 'active' : ''}>{getNavLabel('home')}</a>
+    <a href={getNavLink('ai')} class={isAiActive ? 'active' : ''}>{getNavLabel('ai')}</a>
+    <a href={getNavLink('explore')} class={isExploreActive ? 'active' : ''}>{getNavLabel('explore')}</a>
+    <a href={getNavLink('hotels')} class={isHotelsActive ? 'active' : ''}>{getNavLabel('hotels')}</a>
+    <a href={getNavLink('trending')} class={isTrendingActive ? 'active' : ''}>{getNavLabel('trending')}</a>
+    <a href={prelogLink} id="mobilePrefsBtn">{isChinese ? '偏好設定' : (isJapanese ? '設定' : (isKorean ? '설정' : 'Preferences'))}</a>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;padding-bottom:0.8rem;border-bottom:1px solid rgba(192,57,43,0.1)">
+      <a href={getLangPath('en')} class={"lang-btn" + (isEnglish  ? " active" : "")} style="border:1px solid rgba(192,57,43,0.2);border-radius:3px">🇺🇸 EN</a>
+      <a href={getLangPath('zh')} class={"lang-btn" + (isChinese  ? " active" : "")} style="border:1px solid rgba(192,57,43,0.2);border-radius:3px">🇹🇼 中</a>
+      <a href={getLangPath('jp')} class={"lang-btn" + (isJapanese ? " active" : "")} style="border:1px solid rgba(192,57,43,0.2);border-radius:3px">🇯🇵 日</a>
+      <a href={getLangPath('kr')} class={"lang-btn" + (isKorean  ? " active" : "")} style="border:1px solid rgba(192,57,43,0.2);border-radius:3px">🇰🇷 한</a>
+    </div>
+    <a href={tripLink} class="btn-primary" style="width:fit-content">{isChinese ? '規劃行程' : (isJapanese ? '旅程計画' : (isKorean ? '여행 계획' : 'My Trip'))}</a>
+  </div>
+
+  {shouldShowPrefNudge && (
+    <aside
+      class="pref-nudge"
+      id="prefNudge"
+      data-lang={currentLang.code}
+      data-prelog={prelogLink}
+      aria-label={prefNudge.title}
+    >
+      <div class="pref-nudge-kicker">
+        <span class="material-symbols-outlined" style="font-size:16px">auto_awesome</span>
+        {isChinese ? '個人化' : (isJapanese ? 'パーソナライズ' : (isKorean ? '개인화' : 'Personalized'))}
+      </div>
+      <h2>{prefNudge.title}</h2>
+      <p>{prefNudge.body}</p>
+      <div class="pref-nudge-actions">
+        <a class="pref-nudge-primary" href={prelogLink}>
+          <span class="material-symbols-outlined" style="font-size:16px">tune</span>
+          {prefNudge.primary}
+        </a>
+        <button class="pref-nudge-secondary" type="button" id="prefNudgeDismiss">{prefNudge.secondary}</button>
+      </div>
+    </aside>
+  )}
+
+  {shouldRenderTour && (
+    <>
+      <div class="home-tour-backdrop" id="homeTourBackdrop" aria-hidden="true"></div>
+      <section
+        class="home-tour-card"
+        id="homeTourCard"
+        aria-live="polite"
+        aria-label={continueTourCopy.title}
+        data-steps={JSON.stringify(continueTourCopy.steps)}
+        data-copy={JSON.stringify({
+          eyebrow: continueTourCopy.eyebrow,
+          skip: continueTourCopy.skip,
+          back: continueTourCopy.back,
+          next: continueTourCopy.next,
+          finish: continueTourCopy.finish,
+          stepLabel: continueTourCopy.stepLabel,
+          openLabel: continueTourCopy.openLabel,
+        })}
+      >
+        <div class="home-tour-top">
+          <div>
+            <div class="home-tour-eyebrow">
+              <span class="material-symbols-outlined" style="font-size:15px">route</span>
+              <span id="homeTourEyebrow">{continueTourCopy.eyebrow}</span>
+            </div>
+          </div>
+          <button class="home-tour-close" type="button" id="homeTourClose" aria-label={continueTourCopy.skip}>
+            <span class="material-symbols-outlined" style="font-size:18px">close</span>
+          </button>
+        </div>
+        <h2 id="homeTourTitle">{continueTourCopy.title}</h2>
+        <p id="homeTourBody"></p>
+        <div class="home-tour-progress" id="homeTourProgress" aria-hidden="true"></div>
+        <div class="home-tour-actions">
+          <div class="home-tour-left-actions">
+            <button class="home-tour-btn secondary" type="button" id="homeTourBack">{continueTourCopy.back}</button>
+            <button class="home-tour-btn secondary" type="button" id="homeTourSkip">{continueTourCopy.skip}</button>
+          </div>
+          <div class="home-tour-right-actions">
+            <a class="home-tour-btn link" href={prelogLink} id="homeTourLink">{continueTourCopy.openLabel}</a>
+            <button class="home-tour-btn primary" type="button" id="homeTourNext">{continueTourCopy.next}</button>
+          </div>
+        </div>
+      </section>
+      <button class="home-tour-replay" type="button" id="homeTourReplay" aria-label={continueTourCopy.title} title={continueTourCopy.title}>
+        <span class="material-symbols-outlined" style="font-size:21px">route</span>
+      </button>
+    </>
+  )}
+
+  <slot />
+
+  <script is:inline>
+    // ── LANGUAGE DROPDOWN ──
+    const langDropdown = document.getElementById('langDropdown');
+    const langToggleBtn = document.getElementById('langToggleBtn');
+    if (langDropdown && langToggleBtn) {
+      langToggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = langDropdown.classList.toggle('open');
+        langToggleBtn.setAttribute('aria-expanded', String(isOpen));
+      });
+      document.addEventListener('click', () => {
+        langDropdown.classList.remove('open');
+        langToggleBtn.setAttribute('aria-expanded', 'false');
+      });
+      langDropdown.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    // Save lang preference on option click
+    document.querySelectorAll('.lang-option, .lang-btn').forEach(link => {
+      link.addEventListener('click', () => {
+        const href = link.getAttribute('href') || '';
+        const lang = href.startsWith('/zh') ? 'zh' : href.startsWith('/jp') ? 'jp' : href.startsWith('/kr') ? 'kr' : 'en';
+        try { localStorage.setItem('langPref', lang); } catch {}
+      });
+    });
+
+    // ── FIRST-VISIT PREFERENCE NUDGE ──
+    const prefNudge = document.getElementById('prefNudge');
+    const navPrefsBtn = document.getElementById('navPrefsBtn');
+    let hasPrefs = false;
+    try {
+      const prefs = JSON.parse(localStorage.getItem('ytp_prefs') || 'null');
+      hasPrefs = Boolean(prefs && ((prefs.interests || []).length || (prefs.districts || []).length || prefs.pace || prefs.days));
+    } catch { /* ignore */ }
+
+    // Permanently visible dot indicator when no prefs set
+    if (!hasPrefs && navPrefsBtn) navPrefsBtn.classList.add('no-prefs');
+
+    if (prefNudge) {
+      // Show nudge if no prefs (session-only — dismiss just hides it for this visit)
+      if (!hasPrefs) {
+        window.setTimeout(() => prefNudge.classList.add('is-visible'), 900);
+      }
+      document.getElementById('prefNudgeDismiss')?.addEventListener('click', () => {
+        prefNudge.classList.remove('is-visible');
+      });
+    }
+
+    // ── FIRST-LANDING PRODUCT TOUR ──
+    (function initHomeTour() {
+      const card = document.getElementById('homeTourCard');
+      const backdrop = document.getElementById('homeTourBackdrop');
+      const replay = document.getElementById('homeTourReplay');
+      if (!card || !backdrop) return;
+
+      const title = document.getElementById('homeTourTitle');
+      const body = document.getElementById('homeTourBody');
+      const progress = document.getElementById('homeTourProgress');
+      const backBtn = document.getElementById('homeTourBack');
+      const nextBtn = document.getElementById('homeTourNext');
+      const skipBtn = document.getElementById('homeTourSkip');
+      const closeBtn = document.getElementById('homeTourClose');
+      const link = document.getElementById('homeTourLink');
+      let steps = [];
+      let copy = {};
+      let index = 0;
+      let activeTarget = null;
+      let isOpen = false;
+
+      try {
+        steps = JSON.parse(card.getAttribute('data-steps') || '[]');
+        copy = JSON.parse(card.getAttribute('data-copy') || '{}');
+      } catch {
+        return;
+      }
+      if (!steps.length) return;
+
+      function findTarget(selector) {
+        const matches = Array.from(document.querySelectorAll(selector));
+        return matches.find((el) => {
+          const rect = el.getBoundingClientRect();
+          const style = window.getComputedStyle(el);
+          return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+        }) || matches[0] || document.querySelector('.hero') || document.body;
+      }
+
+      function clearFocus() {
+        if (activeTarget) activeTarget.classList.remove('home-tour-focus');
+        activeTarget = null;
+      }
+
+      function placeCard(target) {
+        const rect = target.getBoundingClientRect();
+        const margin = 16;
+        const cardRect = card.getBoundingClientRect();
+        const width = cardRect.width || Math.min(420, window.innerWidth - 32);
+        const height = cardRect.height || 260;
+        let left = rect.left;
+        let top = rect.bottom + 16;
+
+        if (top + height + margin > window.innerHeight) top = rect.top - height - 16;
+        if (top < margin) top = Math.min(window.innerHeight - height - margin, Math.max(margin, rect.bottom + 16));
+        if (left + width + margin > window.innerWidth) left = window.innerWidth - width - margin;
+        if (left < margin) left = margin;
+
+        card.style.left = `${left}px`;
+        card.style.top = `${top}px`;
+      }
+
+      function render() {
+        if (!isOpen) return;
+        clearFocus();
+        const step = steps[index];
+        const target = findTarget(step.target);
+        activeTarget = target;
+        activeTarget.classList.add('home-tour-focus');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+        if (title) title.textContent = step.title;
+        if (body) body.textContent = step.body;
+        if (link) {
+          link.textContent = step.cta || copy.openLabel || 'Open';
+          link.setAttribute('href', step.href || '#');
+        }
+        if (backBtn) backBtn.disabled = index === 0;
+        if (nextBtn) nextBtn.textContent = index === steps.length - 1 ? (copy.finish || 'Finish') : (copy.next || 'Next');
+        if (progress) {
+          progress.innerHTML = steps.map((_, i) => `<span class="home-tour-dot ${i === index ? 'active' : ''}"></span>`).join('');
+          progress.setAttribute('aria-label', `${copy.stepLabel || 'Step'} ${index + 1} / ${steps.length}`);
+        }
+
+        window.setTimeout(() => placeCard(target), 280);
+      }
+
+      function openTour(force = false) {
+        const isHome = ['/', '/zh', '/jp', '/kr'].includes(window.location.pathname.replace(/\/$/, '') || '/');
+        if (!force && !isHome) return;
+        isOpen = true;
+        index = 0;
+        prefNudge?.classList.remove('is-visible');
+        backdrop.classList.add('is-visible');
+        card.classList.add('is-visible');
+        replay?.classList.remove('is-visible');
+        render();
+      }
+
+      function closeTour(done = true) {
+        isOpen = false;
+        clearFocus();
+        backdrop.classList.remove('is-visible');
+        card.classList.remove('is-visible');
+        if (done) {
+          replay?.classList.add('is-visible');
+        }
+      }
+
+      nextBtn?.addEventListener('click', () => {
+        if (index >= steps.length - 1) {
+          closeTour(true);
+          return;
+        }
+        index += 1;
+        render();
+      });
+      backBtn?.addEventListener('click', () => {
+        index = Math.max(0, index - 1);
+        render();
+      });
+      skipBtn?.addEventListener('click', () => closeTour(true));
+      closeBtn?.addEventListener('click', () => closeTour(true));
+      backdrop.addEventListener('click', () => closeTour(true));
+      replay?.addEventListener('click', () => openTour(true));
+      window.addEventListener('resize', () => render(), { passive: true });
+      document.addEventListener('keydown', (event) => {
+        if (!isOpen) return;
+        if (event.key === 'Escape') closeTour(true);
+        if (event.key === 'ArrowRight') nextBtn?.click();
+        if (event.key === 'ArrowLeft') backBtn?.click();
+      });
+
+      window.setTimeout(() => openTour(false), 650);
+    })();
+
+    // ── GLOBAL CURSOR & UI ──
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+    
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      if (cursor) { cursor.style.left = mouseX + 'px'; cursor.style.top = mouseY + 'px'; }
+    });
+    
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.12;
+      ringY += (mouseY - ringY) * 0.12;
+      if (ring) { ring.style.left = ringX + 'px'; ring.style.top = ringY + 'px'; }
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    // ── GLOBAL NAV SCROLL & MENU ──
+    const nav = document.getElementById('mainNav');
+    window.addEventListener('scroll', () => {
+      nav?.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    hamburger?.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileMenu?.classList.toggle('open');
+    });
+  </script>
+</body>
+</html>

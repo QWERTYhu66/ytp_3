@@ -1,0 +1,135 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import fs from 'node:fs';
+import path from 'node:path';
+import festivals from '../../../data/festivals.json';
+
+type Attraction = {
+  id: string;
+  name: string;
+  district: string;
+  description: string;
+};
+
+type Festival = {
+  slug: string;
+  months: number[];
+  date: { en: string; zh: string; jp: string; kr: string };
+  emoji: string;
+  color: string;
+  title: { en: string; zh: string; jp: string; kr: string };
+  description: { en: string; zh: string; jp: string; kr: string };
+  destinations: string[];
+};
+
+export async function getStaticPaths() {
+  const fests = festivals as Festival[];
+  const raw = fs.readFileSync(path.resolve('./scripts/pages/attractions_zh.json'), 'utf8');
+  const atts = JSON.parse(raw) as Attraction[];
+  const byId = new Map(atts.map((a) => [a.id, a]));
+  return fests.map((f) => ({
+    params: { slug: f.slug },
+    props: {
+      festival: f,
+      destinations: f.destinations
+        .map((id) => byId.get(id))
+        .filter((a): a is Attraction => Boolean(a)),
+    },
+  }));
+}
+
+interface Props { festival: Festival; destinations: Attraction[] }
+const { festival, destinations } = Astro.props as Props;
+
+const MONTH_NAMES = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+const monthLabel = festival.months.map((m) => MONTH_NAMES[m - 1]).join(' — ');
+
+const colorMap: Record<string, string> = {
+  vermillion: '#c0392b',
+  jade: '#1e6b52',
+  gold: '#d4a017',
+  amber: '#b87822',
+  coral: '#e26a6a',
+  pink: '#c5337a',
+  ink: '#1a1a2e',
+};
+const accent = colorMap[festival.color] ?? '#c0392b';
+---
+
+<Layout title={`${festival.title.zh} | 台北指南針`}>
+  <main class="fest-page">
+    <div class="fest-nav">
+      <a href="/zh/festivals" class="back-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        全部節慶
+      </a>
+    </div>
+
+    <section class="fest-hero" style={`background: linear-gradient(135deg, ${accent} 0%, #1a1a2e 100%)`}>
+      <div class="fest-hero-inner">
+        <div class="fest-emoji">{festival.emoji}</div>
+        <div class="fest-kind">{monthLabel}</div>
+        <h1 class="fest-h1">{festival.title.zh}</h1>
+        <div class="fest-date">{festival.date.zh}</div>
+      </div>
+    </section>
+
+    <section class="fest-body">
+      <article class="fest-description">
+        <p>{festival.description.zh}</p>
+      </article>
+
+      {destinations.length > 0 && (
+        <section class="fest-destinations">
+          <h2>推薦去處</h2>
+          <div class="dest-grid">
+            {destinations.map((d) => (
+              <a class="dest-card" href={`/zh/place/a/${d.id}`}>
+                <div class="dest-district">{d.district}</div>
+                <h3 class="dest-name">{d.name}</h3>
+                <p class="dest-desc">{d.description.slice(0, 80)}{d.description.length > 80 ? '…' : ''}</p>
+                <span class="dest-cta">
+                  查看詳情
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+    </section>
+  </main>
+
+  <style is:global>
+    .fest-page { background: var(--parchment, #FDF6E3); min-height: 100vh; padding: 96px 2rem 4rem; color: var(--ink, #1a1a2e); }
+    .fest-nav { max-width: 960px; margin: 0 auto 1rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--vermillion, #c0392b); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .back-link .material-symbols-outlined { font-size: 18px; }
+
+    .fest-hero { position: relative; max-width: 960px; margin: 0 auto; border-radius: 16px; overflow: hidden; color: #fff; padding: 4rem 2.5rem; min-height: 280px; display: flex; align-items: flex-end; }
+    .fest-hero-inner { position: relative; z-index: 2; }
+    .fest-emoji { font-size: 3.5rem; line-height: 1; margin-bottom: 1rem; }
+    .fest-kind { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 0.5rem; }
+    .fest-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; margin: 0.25rem 0 0.5rem; line-height: 1.1; }
+    .fest-date { font-size: 1rem; opacity: 0.9; }
+
+    .fest-body { max-width: 960px; margin: 2rem auto 0; }
+    .fest-description p { font-size: 1.1rem; line-height: 1.75; color: var(--text-secondary, #444); margin: 0 0 2rem; }
+
+    .fest-destinations h2 { font-family: 'Noto Serif TC', serif; font-size: 1.35rem; margin: 1rem 0; }
+    .dest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    .dest-card { background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 12px; padding: 1.25rem; text-decoration: none; color: var(--ink, #1a1a2e); box-shadow: 0 4px 16px rgba(0,0,0,0.04); transition: transform 0.15s ease, box-shadow 0.15s ease; display: flex; flex-direction: column; }
+    .dest-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .dest-district { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--vermillion, #c0392b); }
+    .dest-name { font-family: 'Noto Serif TC', serif; font-size: 1.15rem; font-weight: 800; margin: 0.3rem 0 0.5rem; }
+    .dest-desc { font-size: 0.88rem; line-height: 1.55; color: var(--text-secondary, #555); margin: 0 0 0.75rem; flex: 1; }
+    .dest-cta { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--vermillion, #c0392b); font-weight: 600; font-size: 0.85rem; }
+    .dest-cta .material-symbols-outlined { font-size: 16px; }
+
+    @media (max-width: 768px) {
+      .fest-page { padding: 88px 1.25rem 3rem; }
+      .fest-hero { padding: 2.5rem 1.5rem; min-height: 220px; }
+    }
+  </style>
+</Layout>

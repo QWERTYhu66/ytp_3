@@ -1,0 +1,51 @@
+---
+import HotelBrowser from '../components/hotels.astro';
+import Layout from '../layouts/Layout.astro';
+
+const copy = {
+  kicker: 'Taipei Stay Finder',
+  h1: 'Find a better base for your Taipei trip.',
+  body: 'Browse officially registered Taipei hotels by district, MRT access, room count, and nightly price range. Use the checker when you want to verify a specific booking name.',
+  check: 'Check a hotel',
+  browse: 'Browse stays',
+  registeredHotels: 'registered hotels',
+  districtsCovered: 'districts covered',
+  roomsListed: 'rooms listed',
+  sectionLabel: 'Browse hotels',
+  sectionTitle: 'Start near the places you care about.',
+  searchPlaceholder: 'Search hotel, district, MRT...',
+  searchAria: 'Search hotels',
+  filterAria: 'Filter by district',
+  all: 'All',
+  showing: 'Showing',
+  featuredHotels: 'hotels',
+  featuredHotel: 'hotel',
+  registered: 'Registered',
+  mrtVaries: 'MRT varies',
+  rooms: 'rooms',
+  viewDetails: 'View details',
+  from: 'From',
+  priceVaries: 'Price varies',
+  mapAria: 'Taipei hotel overview',
+  starRated: 'stars',
+  officialSource: 'Official tourism data',
+  priceFilterLabel: 'Price',
+  starFilterLabel: 'Stars',
+  priceAll: 'Any price',
+  priceBudget: 'Under NT$3,000',
+  priceMid: 'NT$3,000-8,000',
+  pricePremium: 'NT$8,000+',
+  priceUnknown: 'Price varies',
+  showMore: 'Show more',
+  showLess: 'Show less',
+  starAll: 'Any stars',
+  starRatedOnly: 'Star-rated only',
+  starThreePlus: '3+ stars',
+  starFourPlus: '4+ stars',
+  starFivePlus: '5 stars',
+};
+---
+
+<Layout title="Hotels | Taipei Compass">
+  <HotelBrowser copy={copy} lang="en" />
+</Layout>

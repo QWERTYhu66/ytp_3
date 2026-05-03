@@ -1,0 +1,225 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getHotelsForLang, type Hotel } from '../../lib/hotelData';
+
+export async function getStaticPaths() {
+  const data = getHotelsForLang('en');
+  return data.map((h) => ({ params: { id: h.id }, props: { hotel: h } }));
+}
+
+interface Props { hotel: Hotel }
+const { hotel } = Astro.props as Props;
+const backHref = Astro.url.searchParams.get('from') === 'ai' ? '/ai' : '/hotels';
+
+const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(hotel.name + ' ' + hotel.address + ' 台北')}&z=16&output=embed`;
+const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.name + ' ' + hotel.address)}`;
+
+function formatPrice(p: number | null) {
+  if (!p) return '—';
+  return 'NT$' + p.toLocaleString();
+}
+---
+
+<Layout title={`${hotel.name} | Taipei Compass`}>
+  <main class="place-page">
+    <div class="place-nav">
+    <a href={backHref} class="back-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back
+      </a>
+    </div>
+
+    <section class="place-hero hotel-hero">
+      <div class="hero-decor"></div>
+      <div class="place-hero-inner">
+        <div class="place-kind">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">hotel</span>
+          Legal Hotel · {(hotel as any).district_en ?? hotel.district}
+        </div>
+        <h1 class="place-h1">{hotel.name}</h1>
+        <div class="place-chips">
+          <span class="place-chip solid">
+            <span class="material-symbols-outlined" style="font-size:14px;vertical-align:-2px">verified</span>
+            Legally Registered
+          </span>
+          <span class="place-chip">{(hotel as any).district_en ?? hotel.district}</span>
+          {hotel.rooms && <span class="place-chip">{hotel.rooms} rooms</span>}
+        </div>
+      </div>
+    </section>
+
+    <section class="place-body">
+      <div class="place-grid">
+        <article class="place-about">
+          <h2>About this hotel</h2>
+          <div class="legal-badge">
+            <span class="material-symbols-outlined">verified_user</span>
+            <div>
+              <div class="badge-title">Verified Legal Accommodation</div>
+              <div class="badge-sub">This hotel is officially registered with the Taipei City Government under ID <strong>{hotel.legal_id}</strong>. It meets all fire safety, hygiene, and consumer protection requirements.</div>
+            </div>
+          </div>
+          <div class="price-block">
+            <div class="price-row">
+              <span class="price-label">Room rate range</span>
+              <span class="price-range">{formatPrice(hotel.lowest_price)} – {formatPrice(hotel.highest_price)}<span class="price-per"> / night</span></span>
+            </div>
+            {hotel.official_star_source && <div class="price-source">Official tourism data</div>}
+          </div>
+          <p class="place-description">{hotel.address}</p>
+        </article>
+
+        <aside class="place-meta">
+          <div class="meta-card">
+            <div class="meta-row">
+              <span class="material-symbols-outlined">subway</span>
+              <div>
+                <div class="meta-label">Nearest MRT</div>
+                <div class="meta-value">{hotel.closest_mrt || '—'}</div>
+              </div>
+            </div>
+            <div class="meta-row">
+              <span class="material-symbols-outlined">location_on</span>
+              <div>
+                <div class="meta-label">District</div>
+                <div class="meta-value">{(hotel as any).district_en ?? hotel.district}</div>
+              </div>
+            </div>
+            <div class="meta-row">
+              <span class="material-symbols-outlined">home</span>
+              <div>
+                <div class="meta-label">Address</div>
+                <div class="meta-value">{hotel.location}</div>
+              </div>
+            </div>
+            {hotel.phone && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">call</span>
+                <div>
+                  <div class="meta-label">Phone</div>
+                  <div class="meta-value">{hotel.phone}</div>
+                </div>
+              </div>
+            )}
+            <div class="meta-row">
+              <span class="material-symbols-outlined">badge</span>
+              <div>
+                <div class="meta-label">License ID</div>
+                <div class="meta-value">{hotel.legal_id}</div>
+              </div>
+            </div>
+            {hotel.rooms && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">bed</span>
+                <div>
+                  <div class="meta-label">Total rooms</div>
+                  <div class="meta-value">{hotel.rooms}</div>
+                </div>
+              </div>
+            )}
+            {hotel.official_star_rating > 0 && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">hotel_class</span>
+                <div>
+                  <div class="meta-label">Official stars</div>
+                  <div class="meta-value">{hotel.official_star_rating}</div>
+                </div>
+              </div>
+            )}
+            <a class="meta-cta" href={mapsLink} target="_blank" rel="noopener">
+              <span class="material-symbols-outlined">directions</span>
+              Get directions
+            </a>
+            {hotel.booking_link && (
+              <a class="meta-cta meta-cta-secondary" href={hotel.booking_link} target="_blank" rel="noopener">
+                <span class="material-symbols-outlined">open_in_new</span>
+                Book now
+              </a>
+            )}
+          </div>
+
+          <div class="verify-card">
+            <span class="material-symbols-outlined">security</span>
+            <div>
+              <div class="verify-title">Safe Stay Verified</div>
+              <div class="verify-sub">Check any hotel listing at <a href="/hotel-check">Safe Stay checker →</a></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="map-frame">
+        <iframe src={mapEmbed} loading="lazy" referrerpolicy="no-referrer-when-downgrade" title={`Map of ${hotel.name}`}></iframe>
+      </div>
+    </section>
+  </main>
+
+  <style is:global>
+    .place-page { background: var(--parchment, #FDF6E3); min-height: 100vh; padding: 96px 2rem 4rem; color: var(--ink, #1a1a2e); }
+    .place-nav { max-width: 960px; margin: 0 auto 1rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--vermillion, #c0392b); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .back-link .material-symbols-outlined { font-size: 18px; }
+
+    /* Hero */
+    .place-hero { position: relative; max-width: 960px; margin: 0 auto; border-radius: 16px; overflow: hidden; padding: 3rem 2.5rem; color: #fff; }
+    .hotel-hero { background: linear-gradient(135deg, #1a3a5c 0%, #2e6da4 100%); }
+    .place-hero .hero-decor { position: absolute; inset: 0; background: radial-gradient(circle at 85% 15%, rgba(255,255,255,0.15), transparent 45%), radial-gradient(circle at 10% 90%, rgba(0,0,0,0.15), transparent 40%); pointer-events: none; }
+    .place-hero-inner { position: relative; }
+    .place-kind { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 0.5rem; }
+    .place-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 900; margin: 0.25rem 0 1rem; line-height: 1.15; }
+    .place-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .place-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.18); color: #fff; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.82rem; backdrop-filter: blur(6px); }
+    .place-chip.solid { background: #fff; color: #1a3a5c; font-weight: 700; }
+
+    /* Body */
+    .place-body { max-width: 960px; margin: 2rem auto 0; }
+    .place-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .place-about h2 { font-family: 'Noto Serif TC', serif; font-size: 1.5rem; margin: 0 0 1rem; }
+
+    /* Legal badge */
+    .legal-badge { display: flex; gap: 0.85rem; align-items: flex-start; background: #eaf7ed; border: 1px solid #4caf7d; border-radius: 12px; padding: 1rem 1.1rem; margin-bottom: 1.25rem; }
+    .legal-badge .material-symbols-outlined { color: #2e7d52; font-size: 26px; margin-top: 0.1rem; flex-shrink: 0; }
+    .badge-title { font-weight: 700; color: #1b5e35; font-size: 0.95rem; margin-bottom: 0.3rem; }
+    .badge-sub { font-size: 0.85rem; color: #2e6049; line-height: 1.6; }
+
+    /* Price block */
+    .price-block { background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+    .price-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .price-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; }
+    .price-range { font-size: 1.2rem; font-weight: 800; color: var(--ink, #1a1a2e); }
+    .price-per { font-size: 0.8rem; font-weight: 400; color: #888; }
+    .price-source { margin-top: 0.45rem; font-size: 0.76rem; font-weight: 700; color: #2e6da4; }
+
+    .place-description { font-size: 0.95rem; line-height: 1.8; color: var(--text-secondary, #555); }
+
+    /* Meta sidebar */
+    .meta-card { background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+    .meta-row { display: flex; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px dashed rgba(0,0,0,0.08); }
+    .meta-row:last-of-type { border-bottom: none; }
+    .meta-row .material-symbols-outlined { color: #2e6da4; font-size: 20px; margin-top: 0.15rem; flex-shrink: 0; }
+    .meta-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; }
+    .meta-value { font-size: 0.9rem; margin-top: 0.1rem; word-break: break-word; }
+    .meta-cta { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1rem; background: #2e6da4; color: #fff; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; width: 100%; justify-content: center; box-sizing: border-box; }
+    .meta-cta:hover { filter: brightness(1.1); }
+    .meta-cta-secondary { background: var(--vermillion, #c0392b); margin-top: 0.5rem; }
+    .meta-cta .material-symbols-outlined { font-size: 18px; }
+
+    /* Verify card */
+    .verify-card { display: flex; gap: 0.75rem; align-items: flex-start; background: #f0f4ff; border: 1px solid #b0c4e8; border-radius: 10px; padding: 0.85rem 1rem; margin-top: 1rem; font-size: 0.82rem; }
+    .verify-card .material-symbols-outlined { color: #2e6da4; font-size: 22px; flex-shrink: 0; }
+    .verify-title { font-weight: 700; color: #1a3a5c; margin-bottom: 0.2rem; }
+    .verify-sub { color: #4a5e7a; }
+    .verify-sub a { color: #2e6da4; }
+
+    /* Map */
+    .map-frame { margin-top: 2rem; border-radius: 12px; overflow: hidden; border: 1px solid rgba(0,0,0,0.1); aspect-ratio: 16/9; }
+    .map-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+    @media (max-width: 768px) {
+      .place-page { padding: 88px 1.25rem 3rem; }
+      .place-hero { padding: 2rem 1.5rem; }
+      .place-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    }
+  </style>
+</Layout>

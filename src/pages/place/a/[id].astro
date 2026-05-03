@@ -1,0 +1,240 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import Layout from '../../../layouts/Layout.astro';
+
+type Attraction = {
+  id: string;
+  name: string;
+  district: string;
+  category: string[];
+  description: string;
+  link: string;
+  lat: number;
+  lng: number;
+  nearby_mrt: string;
+  tags: string[];
+  image?: string;
+  image_credit?: string;
+  suggestion_level?: number;
+};
+
+export async function getStaticPaths() {
+  const raw = fs.readFileSync(path.resolve('./scripts/pages/attractions_en.json'), 'utf8');
+  const data = JSON.parse(raw) as Attraction[];
+  return data
+    .filter((a) => Number(a.suggestion_level) === 3)
+    .map((a) => ({ params: { id: a.id }, props: { attraction: a } }));
+}
+
+interface Props { attraction: Attraction }
+const { attraction } = Astro.props as Props;
+const backHref = Astro.url.searchParams.get('from') === 'ai' ? '/ai' : '/';
+
+const mapEmbed = attraction.lat && attraction.lng
+  ? `https://www.google.com/maps?q=${attraction.lat},${attraction.lng}&z=16&output=embed`
+  : null;
+---
+
+<Layout title={`${attraction.name} | Taipei Compass`}>
+  <main class="place-page">
+    <div class="place-nav">
+      <a href={backHref} class="back-link">
+        <span class="material-symbols-outlined">arrow_back</span>
+        Back
+      </a>
+    </div>
+
+    <section class="place-hero attraction-hero">
+      {attraction.image && (
+        <div class="hero-image" style={`background-image:url('${attraction.image}')`}></div>
+      )}
+      {attraction.image && attraction.image_credit && (
+        <div class="hero-credit">© {attraction.image_credit}</div>
+      )}
+      <div class="hero-decor"></div>
+      <div class="place-hero-inner">
+        <div class="place-kind">
+          <span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">location_on</span>
+          Destination · {attraction.district}
+        </div>
+        <h1 class="place-h1">{attraction.name}</h1>
+        <div class="place-chips">
+          {attraction.category.map((c) => (
+            <span class="place-chip">{c}</span>
+          ))}
+          {attraction.tags.map((t) => (
+            <span class="place-chip ghost">{t}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="place-body">
+      <div class="place-grid">
+        <article class="place-about">
+          <h2>About this place</h2>
+          <p class="place-description">{attraction.description}</p>
+        </article>
+
+        <aside class="place-meta">
+          <div class="meta-card">
+            <div class="meta-row">
+              <span class="material-symbols-outlined">subway</span>
+              <div>
+                <div class="meta-label">Nearest MRT</div>
+                <div class="meta-value">{attraction.nearby_mrt || '—'}</div>
+              </div>
+            </div>
+            <div class="meta-row">
+              <span class="material-symbols-outlined">location_on</span>
+              <div>
+                <div class="meta-label">District</div>
+                <div class="meta-value">{attraction.district}</div>
+              </div>
+            </div>
+            {attraction.lat && (
+              <div class="meta-row">
+                <span class="material-symbols-outlined">explore</span>
+                <div>
+                  <div class="meta-label">Coordinates</div>
+                  <div class="meta-value">{attraction.lat.toFixed(4)}, {attraction.lng.toFixed(4)}</div>
+                </div>
+              </div>
+            )}
+            <a class="meta-cta" href={attraction.link} target="_blank" rel="noopener">
+              <span class="material-symbols-outlined">directions</span>
+              Get directions
+            </a>
+            <button
+              class="meta-cta trip-toggle"
+              id="add-to-trip"
+              type="button"
+              style="margin-top:0.5rem;background:transparent;border:1.5px solid var(--jade,#1E6B52);color:var(--jade,#1E6B52);cursor:pointer"
+            >
+              <span class="material-symbols-outlined" id="trip-icon">bookmark_add</span>
+              <span id="trip-label">Add to Trip</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      {mapEmbed && (
+        <div class="map-frame">
+          <iframe src={mapEmbed} loading="lazy" referrerpolicy="no-referrer-when-downgrade" title={`Map of ${attraction.name}`}></iframe>
+        </div>
+      )}
+    </section>
+  </main>
+
+  <style is:global>
+    .place-page { background: var(--parchment, #FDF6E3); min-height: 100vh; padding: 96px 2rem 4rem; color: var(--ink, #1a1a2e); }
+    .place-nav { max-width: 960px; margin: 0 auto 1rem; }
+    .back-link { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--vermillion, #c0392b); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .back-link .material-symbols-outlined { font-size: 18px; }
+
+    .place-hero { position: relative; max-width: 960px; margin: 0 auto; border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, #b33623 0%, #e07a5f 100%); color: #fff; padding: 3rem 2.5rem; }
+    .hero-image { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.25; }
+    .hero-credit { position: absolute; bottom: 0.5rem; right: 0.75rem; font-size: 0.65rem; color: rgba(255,255,255,0.65); letter-spacing: 0.03em; pointer-events: none; z-index: 1; }
+    .place-hero .hero-decor { position: absolute; inset: 0; background: radial-gradient(circle at 85% 15%, rgba(255,255,255,0.15), transparent 45%), radial-gradient(circle at 10% 90%, rgba(0,0,0,0.2), transparent 40%); pointer-events: none; }
+    .place-hero-inner { position: relative; }
+    .place-kind { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.9; margin-bottom: 0.5rem; }
+    .place-h1 { font-family: 'Noto Serif TC', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; margin: 0.25rem 0 1rem; line-height: 1.1; }
+    .place-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .place-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.22); color: #fff; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.82rem; backdrop-filter: blur(6px); }
+    .place-chip.ghost { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.3); }
+    .place-chip.solid { background: #fff; color: #1a1a1a; font-weight: 700; }
+
+    .place-body { max-width: 960px; margin: 2rem auto 0; }
+    .place-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+    .place-about h2 { font-family: 'Noto Serif TC', serif; font-size: 1.5rem; margin: 0 0 0.75rem; }
+    .place-description { font-size: 1rem; line-height: 1.8; color: var(--text-secondary, #555); white-space: pre-wrap; }
+
+    .meta-card { background: #fff; border: 1px solid rgba(192,57,43,0.12); border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+    .meta-row { display: flex; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px dashed rgba(0,0,0,0.08); }
+    .meta-row:last-of-type { border-bottom: none; }
+    .meta-row .material-symbols-outlined { color: var(--vermillion, #c0392b); font-size: 20px; margin-top: 0.15rem; }
+    .meta-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary, #666); }
+    .meta-value { font-size: 0.95rem; margin-top: 0.1rem; }
+    .meta-cta { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1rem; background: var(--vermillion, #c0392b); color: #fff; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; width: 100%; justify-content: center; box-sizing: border-box; }
+    .meta-cta:hover { filter: brightness(1.08); }
+    .meta-cta .material-symbols-outlined { font-size: 18px; }
+
+    .map-frame { margin-top: 2rem; border-radius: 12px; overflow: hidden; border: 1px solid rgba(192,57,43,0.12); aspect-ratio: 16/9; }
+    .map-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+    @media (max-width: 768px) {
+      .place-page { padding: 88px 1.25rem 3rem; }
+      .place-hero { padding: 2rem 1.5rem; }
+      .place-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    }
+    .trip-toggle.saved {
+      background: var(--jade, #1E6B52) !important;
+      color: #fff !important;
+      border-color: var(--jade, #1E6B52) !important;
+    }
+    .trip-toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(12px);
+      background: var(--ink, #1a1a2e); color: #fff;
+      padding: 0.6rem 1.2rem; border-radius: 999px;
+      font-size: 0.85rem; font-weight: 600;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 9999; white-space: nowrap;
+    }
+    .trip-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+
+  <div class="trip-toast" id="trip-toast"></div>
+
+  <script is:inline define:vars={{ tripPlace: { id: attraction.id, type: 'a', name: attraction.name, district: attraction.district, lat: attraction.lat ?? null, lng: attraction.lng ?? null, image: attraction.image ?? '' } }}>
+    const KEY = 'ytp_trip';
+    const btn = document.getElementById('add-to-trip');
+    const toast = document.getElementById('trip-toast');
+
+    function loadTrip() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(KEY) || '[]');
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && Array.isArray(parsed.places)) return parsed.places;
+        return [];
+      } catch {
+        return [];
+      }
+    }
+    function saveTrip(arr) { localStorage.setItem(KEY, JSON.stringify(arr)); }
+    function isSaved() {
+      return loadTrip().some(p => p.type === tripPlace.type && String(p.id) === String(tripPlace.id));
+    }
+
+    function showToast(msg) {
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function sync() {
+      const saved = isSaved();
+      btn.classList.toggle('saved', saved);
+      document.getElementById('trip-icon').textContent = saved ? 'bookmark_remove' : 'bookmark_add';
+      document.getElementById('trip-label').textContent = saved ? 'Saved to Trip ✓' : 'Add to Trip';
+    }
+
+    btn.addEventListener('click', () => {
+      const trip = loadTrip();
+      if (isSaved()) {
+        saveTrip(trip.filter(p => !(p.type === tripPlace.type && String(p.id) === String(tripPlace.id))));
+        showToast('Removed from trip');
+      } else {
+        trip.push(tripPlace);
+        saveTrip(trip);
+        showToast('✓ Added to your trip!');
+      }
+      sync();
+    });
+
+    sync();
+  </script>
+</Layout>
