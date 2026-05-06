@@ -1,4 +1,4 @@
-* Current website hosted <a href="https://gilded-naiad-6e9a75.netlify.app/">here</a> *
+# Current website hosted <a href="https://gilded-naiad-6e9a75.netlify.app/">here</a>
 
 # Taipei Compass · 台北指南針
 
