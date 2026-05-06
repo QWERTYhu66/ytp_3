@@ -1,3 +1,5 @@
+* Current website hosted <a href="https://gilded-naiad-6e9a75.netlify.app/">here</a> *
+
 # Taipei Compass · 台北指南針
 
 > **EN** — A grounded, multilingual Taipei travel assistant that combines Taipei City open data with Gemini. It recommends real places only—no invented venues, with optional checks against the city’s legal hotel registry.  
